@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datos del Club</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel-clubes.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body class="panel-bg">
+    <!-- NAV INSTITUCIONAL -->
+    <nav class="panel-nav-ref">
+    <img src="{{ url_for('static', filename='assets/img/logo-asociacion.png') }}" alt="Logo Asociación de Hockey sobre Césped" class="panel-header-logo-ref panel-nav-logo-izq">
+    <a href="/panel-clubes" class="inicio-link panel-nav-logo-der" title="Inicio"><i class="fas fa-home" aria-hidden="true"></i></a>
+        <div class="panel-nav-dropdown-container">
+            <a href="#" class="panel-nav-link panel-nav-dropdown-toggle" id="admin-plantel-link">
+                <span class="label-long">Administración Plantel</span>
+                <span class="label-short">Adm. Plantel</span>
+                <i class="fas fa-caret-down"></i>
+            </a>
+            <ul class="panel-nav-dropdown" id="admin-plantel-dropdown">
+                <li><a href="precarga-equipos" class="panel-nav-dropdown-item">Precarga de Equipos</a></li>
+                <li><a href="/crear-lista-buena-fe" class="panel-nav-dropdown-item">Crear Lista de Buena Fe</a></li>
+                <li><a href="/jugadores" class="panel-nav-dropdown-item">Jugadores</a></li>
+                <li><a href="#" class="panel-nav-dropdown-item">Tribunal de Penas</a></li>
+            </ul>
+        </div>
+        <div class="panel-nav-dropdown-container">
+            <a href="#" class="panel-nav-link panel-nav-dropdown-toggle" id="param-club-link">
+                <span class="label-long">Parámetros del Club</span>
+                <span class="label-short">Parám. Club</span>
+                <i class="fas fa-caret-down"></i>
+            </a>
+            <ul class="panel-nav-dropdown" id="param-club-dropdown">
+                <li><a href="/equipos-categorias" class="panel-nav-dropdown-item">Equipos y Categorías</a></li>
+                <li><a href="datos-club" class="panel-nav-dropdown-item">Datos del Club</a></li>
+                <li><a href="#" class="panel-nav-dropdown-item">Cuerpo Técnico</a></li>
+                <li><a href="#" class="panel-nav-dropdown-item">Tabla de Usuarios</a></li>
+            </ul>
+        </div>
+    <span class="panel-nav-club" id="nombre-club-nav"></span>
+    <a href="/login" class="salir-link" title="Salir"><i class="fas fa-sign-out-alt" aria-hidden="true"></i></a>
+    </nav>
+    <main class="panel-main">
+    <h1 class="panel-titulo">Datos del Club - <span id="club-name">Mesa de Control</span></h1>
+        <section class="panel-datos-club">
+            <form class="panel-datos-form">
+                <div class="panel-datos-form-group">
+                    <label for="nombre-club"><b>Nombre del Club:</b></label>
+                    <input type="text" id="nombre-club" value="" readonly style="width: 300px;">
+                </div>
+                <div class="panel-datos-form-group">
+                    <label for="razon-social"><b>Razón Social:</b></label>
+                    <input type="text" id="razon-social" value="" readonly style="width: 300px;">
+                </div>
+                <div class="panel-datos-form-group">
+                    <label for="contacto"><b>Contacto (Apellido y nombres):</b></label>
+                    <input type="text" id="contacto" value="" readonly style="width: 300px;">
+                </div>
+                <div class="panel-datos-form-group">
+                    <label for="email"><b>Email Notificaciones:</b></label>
+                    <input type="email" id="email" value="" readonly style="width: 300px;">
+                </div>
+                <div class="panel-datos-form-group">
+                    <label for="cancha-local"><b>Cancha Local:</b></label>
+                    <input type="text" id="cancha-local" value="" readonly style="width: 300px;">
+                </div>
+                <div class="panel-datos-form-group">
+                    <label for="domicilio"><b>Domicilio:</b></label>
+                    <input type="text" id="domicilio" value="" readonly style="width: 300px;">
+                </div>
+                <div class="panel-datos-form-group">
+                    <label for="telefono"><b>Teléfono Contacto:</b></label>
+                    <input type="text" id="telefono" value="" readonly style="width: 300px;">
+                </div>
+                <div class="panel-datos-form-group">
+                    <label for="web"><b>Página WEB:</b></label>
+                    <input type="text" id="web" value="" readonly style="width: 300px;">
+                </div>
+                <!-- Si tienes árbitro por defecto, agrega el id="arbitro" al select correspondiente -->
+                <div class="panel-datos-form-group">
+                    <label for="arbitro-defecto"><b>Árbitro por Defecto:</b></label>
+                    <select id="arbitro-defecto" disabled>
+                        <option value="">Seleccione</option>
+                    </select>
+                </div>
+            </form>
+        </section>
+    </main>
+    <script src="{{ url_for('static', filename='js/panel-nav.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/csrf.js') }}"></script>
+    <script>
+        // Configurar encabezado y proteger acceso: esta página es solo para clubes
+        (function(){
+            const nombreClub = localStorage.getItem('nombreClub');
+            const clubId = localStorage.getItem('club_id');
+            const navSpan = document.getElementById('nombre-club-nav');
+            if (navSpan) navSpan.textContent = (nombreClub && nombreClub.trim() !== '') ? nombreClub : 'Mesa de Control';
+            if (!clubId) {
+                // Operador: no debería ver Datos del Club
+                window.location.replace('/panel-clubes');
+                return;
+            }
+            const clubTitle = document.getElementById('club-name');
+            if (clubTitle && nombreClub) clubTitle.textContent = nombreClub;
+        })();
+    </script>
+<script src="{{ url_for('static', filename='js/datos-club.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/panel-clubes.js') }}"></script>
+</body>
+</html>

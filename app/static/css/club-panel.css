@@ -1,0 +1,150 @@
+/* club-panel.css - Estilos exclusivos del panel de clubes */
+.panel-container {
+    max-width: 900px;
+    margin: 90px auto 0 auto;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 2rem 2rem 1.5rem 2rem;
+}
+.panel-container h2 {
+    color: #006400;
+    margin-bottom: 1.5rem;
+}
+.panel-menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    margin-top: 0.5rem;
+    justify-content: flex-start;
+}
+.panel-menu-group {
+    margin-bottom: 1.5rem;
+}
+.panel-menu-group-title {
+    font-size: 1.08rem;
+    color: #006400;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    margin-top: 0.7rem;
+    letter-spacing: 0.5px;
+}
+.panel-menu a {
+    background: #006400;
+    color: #fff;
+    padding: 0.7rem 1.2rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background 0.2s;
+    min-width: 170px;
+    text-align: center;
+    margin-bottom: 0.3rem;
+}
+@media (max-width: 900px) {
+    .panel-menu {
+        gap: 0.7rem;
+    }
+    .panel-menu a {
+        min-width: 120px;
+        font-size: 0.97rem;
+        padding: 0.6rem 0.5rem;
+    }
+}
+@media (max-width: 600px) {
+    .panel-menu {
+        flex-direction: column;
+        align-items: stretch;
+        display: none;
+    }
+    .panel-menu.open {
+        display: flex;
+    }
+    .panel-menu-toggle {
+        display: block;
+        background: #006400;
+        color: #fff;
+        border: none;
+        font-size: 2rem;
+        margin: 0.5rem 0 1rem 0;
+        border-radius: 6px;
+        width: 48px;
+        height: 48px;
+        align-self: flex-end;
+        cursor: pointer;
+    }
+}
+@media (min-width: 601px) {
+    .panel-menu-toggle {
+        display: none;
+    }
+}
+.panel-content {
+    min-height: 200px;
+}
+.jugadora-form {
+    max-width: 420px;
+    margin: 1.5rem auto;
+    background: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+    padding: 1.5rem 1.2rem;
+}
+.jugadora-form label {
+    display: block;
+    margin-bottom: 0.3rem;
+    color: #222;
+    font-weight: 500;
+}
+.jugadora-form input, .jugadora-form select {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.jugadora-form input[type="file"] {
+    padding: 0.2rem;
+}
+.jugadora-form button {
+    width: 100%;
+    background: #006400;
+    color: #fff;
+    border: none;
+    padding: 0.7rem;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.jugadora-form button:hover {
+    background: #009e3c;
+}
+.jugadoras-lista {
+    margin-top: 2rem;
+}
+.jugadora-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    padding: 0.7rem 1rem;
+    margin-bottom: 1rem;
+}
+.jugadora-card img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #006400;
+}
+.jugadora-card .info {
+    flex: 1;
+}
+.jugadora-card .info strong {
+    color: #006400;
+}

@@ -1,0 +1,56 @@
+services:
+  traefik:
+    image: traefik:v2.10
+    ports:
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./app/traefik/config/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./app/traefik/config/config.yml:/etc/traefik/config.yml:ro
+      - ./app/traefik/certs:/etc/certs:ro
+    restart: always
+    # Configuración por archivo traefik.yml/config.yml y certificados mkcert
+    labels:
+      - "traefik.enable=true"
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: hockey
+      POSTGRES_USER: hockeyuser
+      POSTGRES_PASSWORD: hockeypass
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"  # usa 5433 en el host para evitar conflicto si 5432 ya está ocupado
+
+  app:
+    build: .
+    depends_on:
+      - db
+      - traefik
+    environment:
+      FLASK_ENV: production
+      DATABASE_URL: postgresql://hockeyuser:hockeypass@db:5432/hockey
+      PROD_DATABASE_URI: postgresql://hockeyuser:hockeypass@db:5432/hockey
+      FLASK_APP: app
+      FLASK_DEBUG: "0"
+      HOST: 0.0.0.0
+      PORT: 5000
+      CORS_ORIGINS: "https://tudominio.com"
+      ENABLE_CSRF: "true"
+    # El puerto ya no se expone directamente, lo maneja Traefik
+    command: python run.py
+    volumes:
+      - .:/app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.hockey.rule=Host(`hockey.localhost`)"
+      - "traefik.http.routers.hockey.entrypoints=https"
+      - "traefik.http.routers.hockey.tls=true"
+      - "traefik.http.services.hockey.loadbalancer.server.port=5000"
+
+volumes:
+  pgdata:
+  

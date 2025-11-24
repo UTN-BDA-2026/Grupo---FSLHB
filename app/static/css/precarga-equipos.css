@@ -1,0 +1,149 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #333333;
+    background-color: #f4f6f9;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+.panel-main {
+    padding: 20px;
+    max-width: 1200px;
+    margin: auto;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 0;
+}
+
+.panel-titulo {
+    font-family: 'Roboto', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #222222;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.panel-tabla-card {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.tabla-sec-panel {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.tabla-sec-panel th {
+    background-color: #007bff;
+    color: #ffffff;
+    text-align: left;
+    padding: 10px;
+    font-size: 14px;
+}
+
+.tabla-sec-panel td {
+    padding: 10px;
+    font-size: 14px;
+    color: #333333;
+    border-bottom: 1px solid #dddddd;
+}
+
+.tabla-sec-panel tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.tabla-sec-panel tr:hover {
+    background-color: #f1f1f1;
+}
+
+.tabla-sec-scroll {
+    overflow-x: auto;
+}
+
+.panel-torneo-form-group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 0;
+    background-color: transparent;
+    box-shadow: none;
+    width: 100%;
+    max-width: 800px;
+    margin: auto;
+}
+
+.panel-torneo-form-group .division-container {
+    flex-grow: 1;
+}
+
+.panel-torneo-form-group .cargar-jugador-container {
+    flex-shrink: 0;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+}
+
+#cargar-jugador-btn {
+    background: linear-gradient(to right, #007bff, #28a745);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#cargar-jugador-btn:hover {
+    background: linear-gradient(to right, #0056b3, #218838);
+}
+
+.panel-nav-dropdown {
+    background-color: #0056b3;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    list-style: none;
+    margin: 0;
+    display: none;
+    position: absolute;
+    z-index: 1000;
+}
+
+.panel-nav-dropdown-item {
+    font-family: 'Roboto', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #ffffff;
+    padding: 10px 15px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.panel-nav-dropdown-item:hover {
+    background-color: #007bff;
+    border-radius: 4px;
+}
+
+/* Ajuste para mantener el menú desplegable visible mientras el mouse esté sobre el botón o el menú */
+.panel-nav-dropdown-toggle:hover + .panel-nav-dropdown,
+.panel-nav-dropdown:hover {
+    display: block;
+}
+
+.panel-nav-dropdown-item::before {
+    content: none;
+}

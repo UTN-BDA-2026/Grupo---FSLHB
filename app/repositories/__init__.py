@@ -1,0 +1,3 @@
+from .club_repositorio import ClubRepository
+from .jugadora_repositorio import JugadoraRepository
+from .resultado_repositorio import ResultadoRepository

@@ -1,0 +1,72 @@
+[
+  {
+    "nombre": "Cuadro Nacional",
+    "logo": "assets/img/CuadroNacional.png",
+    "enlace": "pages/clubes.html#cuadro-nacional"
+  },
+  {
+    "nombre": "San Rafael Tenis Club",
+    "logo": "assets/img/TenisClub.png",
+    "enlace": "pages/clubes.html#tenis-club"
+  },
+  {
+    "nombre": "Maristas",
+    "logo": "assets/img/Maristas.png",
+    "enlace": "pages/clubes.html#maristas"
+  },
+  {
+    "nombre": "Deportivo Argentino",
+    "logo": "assets/img/DeportivoArgentino.png",
+    "enlace": "pages/clubes.html#deportivo-argentino"
+  },
+  {
+    "nombre": "Belgrano",
+    "logo": "assets/img/Belgrano.png",
+    "enlace": "pages/clubes.html#belgrano"
+  },
+  {
+    "nombre": "Goudge",
+    "logo": "assets/img/Goudge.png",
+    "enlace": "pages/clubes.html#goudge"
+  },
+  {
+  "nombre": "Guerreras Goudge",
+  "logo": "assets/img/Guerreras Goudge.png",
+  "enlace": "pages/clubes.html#guerreras-goudge"
+  },
+  {
+  "nombre": "Banco Municipal",
+  "logo": "assets/img/Banco Municipal.png",
+  "enlace": "pages/clubes.html#banco-municipal"
+  },
+    {
+  "nombre": "Xeneizes",
+  "logo": "assets/img/Xeneizes.png",
+  "enlace": "pages/clubes.html#xeneizes"
+  },
+  {
+    "nombre": "Volantes",
+    "logo": "assets/img/Volantes.png",
+    "enlace": "pages/clubes.html#volantes"
+  },
+  {
+    "nombre": "Sub14 Maristas",
+    "logo": "assets/img/Sub14Maristas.png",
+    "enlace": "pages/clubes.html#sub14-maristas"
+  },
+  {
+    "nombre": "Ateneo",
+    "logo": "assets/img/Ateneo.png",
+    "enlace": "pages/clubes.html#ateneo"
+  },
+  {
+    "nombre": "Banco Mendoza",
+    "logo": "assets/img/BancoMendoza.png",
+    "enlace": "pages/clubes.html#banco-mendoza"
+  },
+  {
+    "nombre": "San Jorge",
+    "logo": "assets/img/SanJorge.png",
+    "enlace": "pages/clubes.html#san-jorge"
+  }
+]

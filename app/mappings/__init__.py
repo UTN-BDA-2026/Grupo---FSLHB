@@ -1,0 +1,1 @@
+from .club_mapping import ClubMapping

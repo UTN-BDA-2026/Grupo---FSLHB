@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clubes Afiliados - Asociación de Hockey sobre Césped</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+    <div class="top-bar">
+        <span id="fecha-hoy"></span>
+        <span class="topbar-divider"></span>
+    <a href="/login" class="clubes-login"><i class="fas fa-lock"></i> Ingreso clubes</a>
+    </div>
+    <header>
+        <div style="display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;margin-top:14px;margin-bottom:8px;">
+            <img src="{{ url_for('static', filename='assets/img/logo-asociacion.png') }}" alt="Logo Asociación de Hockey" style="height:80px;max-width:150px;object-fit:contain;">
+            <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                <span style="font-size:1.5rem;font-weight:bold;line-height:1.1;">Asociación de Hockey</span>
+                <span style="font-size:1.5rem;font-weight:bold;line-height:1.1;">sobre Césped</span>
+            </div>
+        </div>
+        <nav>
+            <ul class="nav-rect" id="main-menu">
+                <li><a href="/" title="Inicio"><i class="fas fa-home"></i></a></li>
+                <li class="submenu">
+                    <a href="#" class="submenu-toggle">Institucional</a>
+                    <ul class="dropdown">
+                        <li><a href="/autoridades">Autoridades</a></li>
+                        <li><a href="/reglamento">Reglamento</a></li>
+                        <li><a href="/historial">Historial</a></li>
+                        <li><a href="/clubes">Clubes</a></li>
+                        <li><a href="/equipos">Equipos</a></li>
+                    </ul>
+                </li>
+                <li><a href="/noticias">Noticias</a></li>
+                <li><a href="/calendario">Calendario</a></li>
+                <li><a href="/galeria">Galería</a></li>
+                <li><a href="/sponsors">Sponsors</a></li>
+                <li><a href="/contacto">Contacto</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section>
+            <h2>Clubes Afiliados</h2>
+            <div id="clubes-lista">
+                <!-- Aquí se mostrarán los clubes con logo y datos -->
+                <div class="club-card">
+                    <img src="{{ url_for('static', filename='assets/club1.png') }}" alt="Club 1" style="width:80px;">
+                    <h3>Club 1</h3>
+                    <p>Dirección: Calle 1, Ciudad</p>
+                    <a href="#">Ver sitio</a>
+                </div>
+                <div class="club-card">
+                    <img src="{{ url_for('static', filename='assets/club2.png') }}" alt="Club 2" style="width:80px;">
+                    <h3>Club 2</h3>
+                    <p>Dirección: Calle 2, Ciudad</p>
+                    <a href="#">Ver sitio</a>
+                </div>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <div style="display:flex;align-items:center;justify-content:center;flex-direction:row;gap:16px;width:100%;">
+            <img src="{{ url_for('static', filename='assets/img/logo-asociacion.png') }}" alt="Logo Asociación de Hockey" style="height:48px;width:auto;">
+            <p style="margin:0; text-align:center; flex:1;">&copy; 2025 Asociación de Hockey sobre Césped</p>
+        </div>
+        <div id="redes-sociales"></div>
+    </footer>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/redes.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/responsive.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/clubes.js') }}"></script>
+    <script>
+    // Mostrar la fecha actual en la barra superior
+    const fechaHoy = document.getElementById('fecha-hoy');
+    if (fechaHoy) {
+        const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        const hoy = new Date();
+        fechaHoy.textContent = `${hoy.getDate()} de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()}`;
+    }
+    </script>
+</body>
+</html>

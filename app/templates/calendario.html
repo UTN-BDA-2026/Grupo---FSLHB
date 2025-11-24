@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario - Hockey Acción San Rafael</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+    <div class="top-bar">
+        <span id="fecha-hoy"></span>
+        <span class="topbar-divider"></span>
+    <a href="/login" class="clubes-login"><i class="fas fa-lock"></i> Ingreso clubes</a>
+    </div>
+    <header>
+        <div style="display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;margin-top:14px;margin-bottom:8px;">
+            <img src="{{ url_for('static', filename='assets/img/logo-asociacion.png') }}" alt="Logo Asociación de Hockey" style="height:80px;max-width:150px;object-fit:contain;">
+            <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                <span style="font-size:1.5rem;font-weight:bold;line-height:1.1;">Hockey Acción</span>
+                <span style="font-size:1.5rem;font-weight:bold;line-height:1.1;">San Rafael</span>
+            </div>
+        </div>
+        <nav>
+            <div class="mobile-nav-actions">
+                <a href="/" class="home-button" aria-label="Inicio"><i class="fas fa-home"></i></a>
+                <button class="menu-toggle" aria-label="Abrir menú" aria-expanded="false">&#8801;</button>
+            </div>
+            <ul class="nav-rect" id="main-menu">
+                <li><a href="/" title="Inicio"><i class="fas fa-home"></i></a></li>
+                <li class="submenu">
+                    <a href="#" class="submenu-toggle">Institucional</a>
+                    <ul class="dropdown">
+                        <li><a href="/autoridades">Autoridades</a></li>
+                        <li><a href="/reglamento">Reglamento</a></li>
+                        <li><a href="/historial">Historial</a></li>
+                    </ul>
+                </li>
+                <li><a href="/noticias">Noticias</a></li>
+                <li><a href="/calendario">Calendario</a></li>
+                <li><a href="/galeria">Galería</a></li>
+                <li><a href="/sponsors">Sponsors</a></li>
+                <li><a href="/contacto"><i class="fas fa-envelope" style="color:inherit;margin-right:6px;"></i>Contacto</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section class="calendario-section">
+            <h2>Próximos Partidos</h2>
+            <div>
+                <label for="filtro-equipo">Filtrar por equipo:</label>
+                <select id="filtro-equipo">
+                    <option value="todos">Todos</option>
+                    <option value="Femenino">Femenino</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Juveniles">Juveniles</option>
+                </select>
+            </div>
+            <ul id="lista-partidos"></ul>
+        </section>
+
+        <section class="calendario-visual-section" style="margin:2.5rem 0 2rem 0;">
+          <h2>Calendario Visual de Partidos y Eventos</h2>
+          <iframe src="https://calendar.google.com/calendar/embed?src=mdzhockey.com.ar%40gmail.com&ctz=America%2FArgentina%2FMendoza" style="border-radius:12px;border:1.5px solid #1976d2;width:100%;max-width:900px;height:520px;background:#fff;box-shadow:0 2px 12px rgba(25,118,210,0.10);margin:0 auto;display:block;" frameborder="0" scrolling="no"></iframe>
+          <!-- Reemplaza el src por el calendario real de la asociación -->
+        </section>
+    </main>
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-logo">
+                <img src="{{ url_for('static', filename='assets/img/logo-asociacion.png') }}" alt="Logo Asociación de Hockey" style="height:48px;width:auto;">
+            </div>
+            <div class="footer-copyright">
+                <p style="margin:0; text-align:center;">&copy; 2025 Hockey Acción San Rafael</p>
+            </div>
+            <div class="footer-social">
+                <div id="redes-sociales"></div>
+            </div>
+        </div>
+    </footer>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/redes.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/calendario.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/responsive.js') }}"></script>
+    <script>
+        // Mostrar la fecha actual en la barra superior
+        const fechaHoy = document.getElementById('fecha-hoy');
+        if (fechaHoy) {
+            const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+            const hoy = new Date();
+            fechaHoy.textContent = `${hoy.getDate()} de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()}`;
+        }
+    </script>
+</body>
+</html>

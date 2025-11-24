@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carga de Incidencias</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel-clubes.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/crear-lista-buena-fe.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body class="panel-bg">
+    <!-- NAV INSTITUCIONAL -->
+    <nav class="panel-nav-ref">
+    <img src="{{ url_for('static', filename='assets/img/logo-asociacion.png') }}" alt="Logo Asociación de Hockey sobre Césped" class="panel-header-logo-ref panel-nav-logo-izq">
+    <a href="/panel-clubes" class="inicio-link panel-nav-logo-der" title="Inicio"><i class="fas fa-home"></i></a>
+        <div class="panel-nav-dropdown-container">
+            <a href="#" class="panel-nav-link panel-nav-dropdown-toggle" id="admin-plantel-link">
+                <span class="label-long">Administración Plantel</span>
+                <span class="label-short">Adm. Plantel</span>
+                <i class="fas fa-caret-down"></i>
+            </a>
+            <ul class="panel-nav-dropdown" id="admin-plantel-dropdown">
+                <li><a href="precarga-equipos.html" class="panel-nav-dropdown-item">Precarga de Equipos</a></li>
+                <li><a href="#" class="panel-nav-dropdown-item">Carga de incidencias</a></li>
+                <li><a href="/crear-lista-buena-fe" class="panel-nav-dropdown-item">Crear Lista de Buena Fe</a></li>
+                <li><a href="/jugadores" class="panel-nav-dropdown-item">Jugadores</a></li>
+                <li><a href="#" class="panel-nav-dropdown-item">Tribunal de Penas</a></li>
+            </ul>
+        </div>
+        <div class="panel-nav-dropdown-container">
+            <a href="#" class="panel-nav-link panel-nav-dropdown-toggle" id="param-club-link">
+                <span class="label-long">Parámetros del Club</span>
+                <span class="label-short">Parám. Club</span>
+                <i class="fas fa-caret-down"></i>
+            </a>
+            <ul class="panel-nav-dropdown" id="param-club-dropdown">
+                <li><a href="/equipos-categorias" class="panel-nav-dropdown-item">Equipos y Categorías</a></li>
+                <li><a href="datos-club.html" class="panel-nav-dropdown-item">Datos del Club</a></li>
+                <li><a href="#" class="panel-nav-dropdown-item">Cuerpo Técnico</a></li>
+                <li><a href="#" class="panel-nav-dropdown-item">Tabla de Usuarios</a></li>
+            </ul>
+        </div>
+        <span class="panel-nav-club" id="nombre-club-nav"></span>
+    <a href="/login" class="salir-link" title="Salir"><i class="fas fa-sign-out-alt"></i></a>
+    </nav>
+    <main class="panel-main">
+        <h1 class="panel-titulo">Carga de Incidencias</h1>
+        <section class="panel-form-card" style="max-width:700px;margin:auto;">
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                <label><b>Partido:</b>
+                    <select id="partido-select" style="min-width:220px;"></select>
+                </label>
+                <label><b>Fecha Nro:</b> <span id="lbl-fecha-num" class="chip"></span></label>
+                <label><b>Fecha y Hora:</b> <span id="lbl-fecha-hora" class="chip"></span></label>
+                <label><b>Torneo:</b> <span id="lbl-torneo" class="chip"></span></label>
+                <label><b>Encuentro:</b> <span id="lbl-encuentro" class="chip"></span></label>
+
+                <div style="display:flex; gap:8px; margin-top:12px;">
+                    <button id="btn-salir" class="panel-btn-secondary" type="button">Salir</button>
+                    <button id="btn-apertura" class="panel-btn" type="button">Apertura Partido ✓</button>
+                    <button id="btn-cierre" class="panel-btn" type="button" style="display:none;background:#e53935;border-color:#e53935;">Cierre Partido ✗</button>
+                </div>
+                <div id="planilla-actions" style="display:none; gap:8px; margin-top:8px;">
+                    <a id="btn-planilla" class="panel-btn" href="#" target="_blank" rel="noopener">Descargar planilla PDF</a>
+                </div>
+                <div id="incidencias-msg" style="color:red;"></div>
+            </div>
+        </section>
+        <section id="alineaciones" style="max-width:900px;margin:32px auto 0 auto;"></section>
+        <section id="arbitros-partido" style="display:none;max-width:900px;margin:24px auto 0 auto;">
+            <h2 class="tabla-sec-titulo">Árbitros del Partido</h2>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+                <div>
+                    <label><b>Árbitro 1</b>
+                        <select id="arb1-select" style="min-width:240px;"></select>
+                    </label>
+                </div>
+                <div>
+                    <label><b>Árbitro 2</b>
+                        <select id="arb2-select" style="min-width:240px;"></select>
+                    </label>
+                </div>
+                <button id="arb-guardar-btn" class="panel-btn" type="button">Guardar</button>
+                <span id="arb-guardado-msg" style="margin-left:8px;color:#16a34a;"></span>
+            </div>
+        </section>
+    </main>
+    <script src="{{ url_for('static', filename='js/panel-nav.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/csrf.js') }}"></script>
+    <script>
+    // Utilidad formateo
+    const fmtFecha = (iso) => {
+        if (!iso) return '';
+        const d = new Date(iso);
+        const dd = String(d.getDate()).padStart(2,'0');
+        const mm = String(d.getMonth()+1).padStart(2,'0');
+        const yyyy = d.getFullYear();
+        const hh = String(d.getHours()).padStart(2,'0');
+        const mi = String(d.getMinutes()).padStart(2,'0');
+        return `${dd}/${mm}/${yyyy} ${hh}:${mi}`;
+    };
+
+    document.addEventListener('DOMContentLoaded', async () => {
+    const msg = document.getElementById('incidencias-msg');
+        const lblFechaNum = document.getElementById('lbl-fecha-num');
+        const lblFechaHora = document.getElementById('lbl-fecha-hora');
+        const lblTorneo = document.getElementById('lbl-torneo');
+        const lblEncuentro = document.getElementById('lbl-encuentro');
+        const btnApertura = document.getElementById('btn-apertura');
+    const btnCierre = document.getElementById('btn-cierre');
+        const planillaActions = document.getElementById('planilla-actions');
+        const btnPlanilla = document.getElementById('btn-planilla');
+        const btnSalir = document.getElementById('btn-salir');
+        const partidoSelect = document.getElementById('partido-select');
+
+    // Estado actual del partido seleccionado
+    let estadoPartido = null;
+
+    // Cargar partidos disponibles (puedes filtrar por club si tienes el clubId)
+        async function cargarPartidos() {
+            partidoSelect.innerHTML = '<option value="">Seleccione Partido</option>';
+            try {
+                // Para operadores (sin nombreClub), NO filtrar por club_id aunque exista en localStorage
+                const nombreClub = localStorage.getItem('nombreClub');
+                const clubIdRaw = localStorage.getItem('club_id');
+                const clubId = (nombreClub && clubIdRaw) ? clubIdRaw : null;
+                // Traer solo partidos que NO estén cerrados (estado != 'jugado')
+                const base = `/partidos?estado_not=jugado`;
+                const url = clubId ? `${base}&club_id=${encodeURIComponent(clubId)}` : base;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('No se pudieron obtener los partidos');
+                const partidos = await res.json();
+                if (!Array.isArray(partidos) || partidos.length === 0) {
+                    msg.style.color = 'red';
+                    msg.textContent = clubId ? 'No hay partidos programados para tu club.' : 'No hay partidos programados.';
+                    return;
+                }
+                partidos.forEach(p => {
+                    const label = `Fecha ${p.fecha_numero ?? ''}: ${p.club_local_nombre ?? 'Local'} vs ${p.club_visitante_nombre ?? 'Visitante'}`;
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = label;
+                    partidoSelect.appendChild(opt);
+                });
+            } catch (e) {
+                msg.textContent = e.message || 'Error cargando partidos';
+            }
+        }
+
+        // Al seleccionar partido, cargar datos y validar precarga
+        partidoSelect.addEventListener('change', async () => {
+            msg.textContent = '';
+            const partidoId = partidoSelect.value;
+            btnApertura.disabled = true; // por defecto deshabilitado
+
+            // Limpiar si no hay selección
+            if (!partidoId) {
+                lblFechaNum.textContent = '';
+                lblFechaHora.textContent = '';
+                lblTorneo.textContent = '';
+                lblEncuentro.textContent = '';
+                planillaActions.style.display = 'none';
+                const arbSection = document.getElementById('arbitros-partido');
+                if (arbSection) arbSection.style.display = 'none';
+                return;
+            }
+
+            try {
+                // Obtener datos del partido
+                const res = await fetch(`/partidos/${encodeURIComponent(partidoId)}`);
+                if (!res.ok) throw new Error('No se pudo obtener el partido');
+                const p = await res.json();
+
+                // Mostrar datos
+                lblFechaNum.textContent = p.fecha_numero ?? '';
+                lblFechaHora.textContent = fmtFecha(p.fecha_hora);
+                lblTorneo.textContent = (p.torneo || '').toUpperCase();
+                const enc = `${p.club_local_nombre ?? 'LOCAL'} vs ${p.club_visitante_nombre ?? 'VISITANTE'}`;
+                lblEncuentro.textContent = enc;
+                localStorage.setItem('partido_id', p.id);
+                estadoPartido = p.estado || null;
+
+                // Siempre mostrar Apertura; Cierre se mostrará SOLO luego de presionar Apertura
+                btnApertura.style.display = '';
+                btnCierre.style.display = 'none';
+                // Si ya está jugado, mostrar descarga de planilla
+                if ((p.estado || '').toLowerCase() === 'jugado') {
+                    planillaActions.style.display = '';
+                    btnPlanilla.href = `/partidos/${encodeURIComponent(p.id)}/planilla.pdf?t=${Date.now()}`;
+                } else {
+                    planillaActions.style.display = 'none';
+                }
+
+                // Validar precarga de ambos clubes antes de habilitar apertura
+                const precargaLocal = await fetch(`/partidos/${partidoId}/precarga?club_id=${p.club_local_id}`);
+                const precargaVisitante = await fetch(`/partidos/${partidoId}/precarga?club_id=${p.club_visitante_id}`);
+                const listaLocal = precargaLocal.ok ? await precargaLocal.json() : [];
+                const listaVisitante = precargaVisitante.ok ? await precargaVisitante.json() : [];
+                const faltaLocal = !(Array.isArray(listaLocal) && listaLocal.length > 0);
+                const faltaVisit = !(Array.isArray(listaVisitante) && listaVisitante.length > 0);
+                if (!faltaLocal && !faltaVisit && (p.estado !== 'jugado')) {
+                    btnApertura.disabled = false;
+                    msg.textContent = '';
+                } else {
+                    btnApertura.disabled = true;
+                    const faltantes = [];
+                    if (faltaLocal) faltantes.push(p.club_local_nombre || 'Club Local');
+                    if (faltaVisit) faltantes.push(p.club_visitante_nombre || 'Club Visitante');
+                    // Mensaje solo si faltan precargas
+                    if (faltaLocal || faltaVisit) {
+                        msg.style.color = 'red';
+                        msg.textContent = `No es posible hacer la apertura por falta de carga del club: ${faltantes.join(' y ')}`;
+                    }
+                }
+            } catch (e) {
+                btnApertura.disabled = true;
+                msg.textContent = e.message || 'Error cargando/validando el partido';
+            }
+        });
+
+        btnApertura.addEventListener('click', async () => {
+            msg.textContent = '';
+            const partidoId = partidoSelect.value;
+            if (!partidoId) {
+                msg.textContent = 'Selecciona un partido primero.';
+                return;
+            }
+            try {
+                if (estadoPartido === 'en_juego') {
+                    // Ya estaba abierto: solo mostrar Cierre y alineaciones
+                    msg.style.color = 'green';
+                    msg.textContent = 'El partido ya estaba abierto.';
+                } else {
+                    const res = await fetch(`/partidos/${encodeURIComponent(partidoId)}/apertura`, { method: 'PATCH' });
+                    if (!res.ok) {
+                        let errorMsg = 'No se pudo abrir el partido';
+                        try {
+                            const err = await res.json();
+                            if (err.error) errorMsg = err.error;
+                        } catch {}
+                        msg.style.color = 'red';
+                        msg.textContent = errorMsg;
+                        return;
+                    }
+                    msg.style.color = 'green';
+                    msg.textContent = 'Partido abierto correctamente.';
+                    estadoPartido = 'en_juego';
+                }
+                // Cargar alineaciones
+                await cargarAlineaciones(partidoId);
+                // Cargar/mostrar árbitros del partido
+                await cargarArbitros(partidoId);
+                // Cambiar botones (Apertura visible pero deshabilitado)
+                btnApertura.style.display = '';
+                btnApertura.disabled = true;
+                btnCierre.style.display = '';
+            } catch (e) {
+                msg.style.color = 'red';
+                msg.textContent = e.message || 'Error en apertura de partido';
+            }
+        });
+
+        btnCierre.addEventListener('click', async () => {
+            msg.textContent = '';
+            const partidoId = partidoSelect.value;
+            if (!partidoId) {
+                msg.textContent = 'Selecciona un partido primero.';
+                return;
+            }
+            try {
+                const res = await fetch(`/partidos/${encodeURIComponent(partidoId)}/cierre`, { method: 'PATCH' });
+                if (!res.ok) {
+                    let errorMsg = 'No se pudo cerrar el partido';
+                    try { const err = await res.json(); if (err.error) errorMsg = err.error; } catch {}
+                    msg.style.color = 'red';
+                    msg.textContent = errorMsg;
+                    return;
+                }
+                msg.style.color = 'green';
+                msg.textContent = 'Partido cerrado correctamente.';
+                let planillaUrl = null;
+                try{ const j = await res.json(); if (j && j.planilla_url) planillaUrl = j.planilla_url; }catch{}
+                // Opcional: deshabilitar acciones en la UI
+                deshabilitarIncidencias();
+                // Ocultar cierre; Apertura queda visible (deshabilitada)
+                btnCierre.style.display = 'none';
+                estadoPartido = 'jugado';
+                // Mostrar botón de descarga
+                planillaActions.style.display = '';
+                const cacheBust = Date.now();
+                btnPlanilla.href = (planillaUrl || `/partidos/${encodeURIComponent(partidoId)}/planilla.pdf`) + `?t=${cacheBust}`;
+                // Refrescar combo de partidos para que ya no aparezca el partido cerrado
+                await cargarPartidos();
+            } catch (e) {
+                msg.style.color = 'red';
+                msg.textContent = e.message || 'Error en cierre de partido';
+            }
+        });
+
+        btnSalir.addEventListener('click', () => {
+            window.location.href = '/panel-clubes';
+        });
+
+        await cargarPartidos();
+    });
+
+    // Render helpers fuera del onload para mantener el scope
+    // Helper para logo: convierte nombre de club en nombre de archivo .png existente
+    function logoFile(nombre) {
+        if (!nombre) return 'logo-asociacion.png';
+        const base = String(nombre).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]/g, '');
+        return (base || 'logo-asociacion') + '.png';
+    }
+
+    // ============== Árbitros del partido ==============
+    async function cargarArbitros(partidoId) {
+        try {
+            const wrap = document.getElementById('arbitros-partido');
+            const r = await fetch(`/partidos/${encodeURIComponent(partidoId)}/arbitros`);
+            if (!r.ok) throw new Error('No se pudieron cargar árbitros');
+            const j = await r.json();
+            const arb1 = document.getElementById('arb1-select');
+            const arb2 = document.getElementById('arb2-select');
+            const opts = ['<option value="">Seleccione Árbitro</option>']
+                .concat((j.disponibles || []).map(a => `<option value="${a.id}">${(a.apellido||'')}, ${(a.nombre||'')} (${a.dni||''})</option>`));
+            arb1.innerHTML = opts.join('');
+            arb2.innerHTML = opts.join('');
+            const asignados = (j.asignados || []).map(x => String(x.arbitro_id));
+            if (asignados[0]) arb1.value = asignados[0];
+            if (asignados[1]) arb2.value = asignados[1];
+            document.getElementById('arb-guardar-btn').onclick = async () => {
+                const ids = [];
+                if (arb1.value) ids.push(parseInt(arb1.value));
+                if (arb2.value && arb2.value !== arb1.value) ids.push(parseInt(arb2.value));
+                const res = await fetch(`/partidos/${encodeURIComponent(partidoId)}/arbitros`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ arbitro_ids: ids }) });
+                const jr = await res.json().catch(()=>({}));
+                const msg = document.getElementById('arb-guardado-msg');
+                if (!res.ok) { msg.textContent = jr.error || 'No se pudo guardar'; msg.style.color = '#e53935'; return; }
+                msg.textContent = 'Árbitros guardados'; msg.style.color = '#16a34a'; setTimeout(()=> msg.textContent='', 1600);
+            };
+            wrap.style.display = '';
+        } catch (_) {
+            const wrap = document.getElementById('arbitros-partido');
+            if (wrap) wrap.style.display = 'none';
+        }
+    }
+
+    function deshabilitarIncidencias() {
+        // Deshabilita los botones '+' para evitar más registros tras el cierre
+        document.querySelectorAll('button[onclick^="openIncidenciaModal("]').forEach(b => { b.disabled = true; b.style.opacity = '0.6'; b.style.cursor = 'not-allowed'; });
+    }
+    async function cargarAlineaciones(partidoId) {
+        const cont = document.getElementById('alineaciones');
+        cont.innerHTML = '';
+        try {
+            const res = await fetch(`/partidos/${encodeURIComponent(partidoId)}/alineaciones`);
+            if (!res.ok) throw new Error('No se pudieron obtener las alineaciones');
+            const data = await res.json();
+
+            const seccion = document.createElement('div');
+            seccion.innerHTML = `
+                <div style="display:flex; gap:24px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:320px;">
+                        <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:12px;">
+                            <img src='/static/assets/img/${logoFile(data.club_local.nombre)}' alt='Logo ${escapeHtml(data.club_local.nombre)}' style='width:80px;height:80px;object-fit:contain;margin-bottom:8px;background:#fff;border-radius:8px;border:1px solid #eee;' onerror="this.onerror=null;this.src='/static/assets/img/logo-asociacion.png';">
+                            <div style='background:#2196f3;color:#fff;font-size:2em;font-weight:700;padding:8px 0;width:100px;border-radius:8px;box-shadow:0 2px 8px #0001;margin-bottom:8px;text-align:center;'><span id="goles-local-count">${data.goles_local ?? 0}</span></div>
+                            <div style='font-size:1em;font-weight:600;margin-bottom:8px;'>Goles: ${escapeHtml(data.club_local.nombre)}</div>
+                            <div style='display:flex;gap:18px;margin-bottom:8px;'>
+                                <div style='display:flex;flex-direction:column;align-items:center;'>
+                                    <div style='width:36px;height:36px;background:#ffe600;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2em;font-weight:700;'><span id="amarillas-local-count">0</span></div>
+                                    <span style='font-size:0.9em;color:#888;'>Amarillas</span>
+                                </div>
+                                <div style='display:flex;flex-direction:column;align-items:center;'>
+                                    <div style='width:36px;height:36px;background:#e53935;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2em;font-weight:700;color:#fff;'><span id="rojas-local-count">0</span></div>
+                                    <span style='font-size:0.9em;color:#888;'>Rojas</span>
+                                </div>
+                                <div style='display:flex;flex-direction:column;align-items:center;'>
+                                    <div style='width:36px;height:36px;background:#43a047;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2em;font-weight:700;color:#fff;'><span id="verdes-local-count">0</span></div>
+                                    <span style='font-size:0.9em;color:#888;'>Verdes</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="font-size:1.35em;font-weight:700;color:#222;margin-bottom:12px;letter-spacing:0.5px;text-align:center;">${escapeHtml(data.club_local.nombre)}</div>
+                        ${renderTablaJugadoras(data.club_local.jugadoras, data.club_local.id, 'local')}
+                        ${renderCuerpoTecnicoUI(data.club_local.id, 'local')}
+                    </div>
+                    <div style="flex:1; min-width:320px;">
+                        <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:12px;">
+                            <img src='/static/assets/img/${logoFile(data.club_visitante.nombre)}' alt='Logo ${escapeHtml(data.club_visitante.nombre)}' style='width:80px;height:80px;object-fit:contain;margin-bottom:8px;background:#fff;border-radius:8px;border:1px solid #eee;' onerror="this.onerror=null;this.src='/static/assets/img/logo-asociacion.png';">
+                            <div style='background:#2196f3;color:#fff;font-size:2em;font-weight:700;padding:8px 0;width:100px;border-radius:8px;box-shadow:0 2px 8px #0001;margin-bottom:8px;text-align:center;'><span id="goles-visit-count">${data.goles_visitante ?? 0}</span></div>
+                            <div style='font-size:1em;font-weight:600;margin-bottom:8px;'>Goles: ${escapeHtml(data.club_visitante.nombre)}</div>
+                            <div style='display:flex;gap:18px;margin-bottom:8px;'>
+                                <div style='display:flex;flex-direction:column;align-items:center;'>
+                                    <div style='width:36px;height:36px;background:#ffe600;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2em;font-weight:700;'><span id="amarillas-visit-count">0</span></div>
+                                    <span style='font-size:0.9em;color:#888;'>Amarillas</span>
+                                </div>
+                                <div style='display:flex;flex-direction:column;align-items:center;'>
+                                    <div style='width:36px;height:36px;background:#e53935;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2em;font-weight:700;color:#fff;'><span id="rojas-visit-count">0</span></div>
+                                    <span style='font-size:0.9em;color:#888;'>Rojas</span>
+                                </div>
+                                <div style='display:flex;flex-direction:column;align-items:center;'>
+                                    <div style='width:36px;height:36px;background:#43a047;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2em;font-weight:700;color:#fff;'><span id="verdes-visit-count">0</span></div>
+                                    <span style='font-size:0.9em;color:#888;'>Verdes</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="font-size:1.35em;font-weight:700;color:#222;margin-bottom:12px;letter-spacing:0.5px;text-align:center;">${escapeHtml(data.club_visitante.nombre)}</div>
+                        ${renderTablaJugadoras(data.club_visitante.jugadoras, data.club_visitante.id, 'visit')}
+                        ${renderCuerpoTecnicoUI(data.club_visitante.id, 'visit')}
+                    </div>
+                </div>`;
+            cont.appendChild(seccion);
+            // Sección de notas
+            const notas = document.createElement('section');
+            notas.style.cssText = 'max-width:900px;margin:24px auto 0 auto;border:1px solid #e5e7eb;border-radius:10px;';
+            notas.innerHTML = `
+                <div style="padding:12px 16px;border-bottom:1px solid #e5e7eb;font-weight:700;font-size:1.2em;">Notas y Observaciones</div>
+                <div style="padding:16px;">
+                    <label style="display:block;margin-bottom:6px;color:#444;">Detalle:</label>
+                    <textarea id="nota-detalle" rows="4" style="width:100%;resize:vertical;padding:10px;border:1px solid #cbd5e1;border-radius:8px;outline:none;"></textarea>
+                    <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-start;">
+                        <button id="btn-guardar-nota" class="panel-btn" type="button">Graba Notas ✓</button>
+                        <span id="nota-msg" style="margin-left:8px;color:#16a34a;"></span>
+                    </div>
+                </div>`;
+            cont.appendChild(notas);
+
+            // Cargar nota existente
+            try {
+                const nres = await fetch(`/partidos/${encodeURIComponent(partidoId)}/notas`);
+                if (nres.ok) {
+                    const n = await nres.json();
+                    const ta = document.getElementById('nota-detalle');
+                    if (ta) ta.value = n.detalle || '';
+                }
+            } catch {}
+
+            // Cargar combos de cuerpo técnico para ambos clubes
+            try {
+                await cargarCombosCT(partidoId, data.club_local.id, 'local');
+                await cargarCombosCT(partidoId, data.club_visitante.id, 'visit');
+            } catch {}
+
+            // Guardar
+            const btnNota = document.getElementById('btn-guardar-nota');
+            if (btnNota) {
+                btnNota.addEventListener('click', async ()=>{
+                    const ta = document.getElementById('nota-detalle');
+                    const msg = document.getElementById('nota-msg');
+                    msg.textContent = '';
+                    try {
+                        const sres = await fetch(`/partidos/${encodeURIComponent(partidoId)}/notas`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ detalle: ta.value || '' }) });
+                        if (!sres.ok) throw new Error('No se pudo guardar la nota');
+                        msg.style.color = '#16a34a';
+                        msg.textContent = 'Guardado';
+                        setTimeout(()=>{ msg.textContent=''; }, 2000);
+                    } catch(e) {
+                        msg.style.color = 'red';
+                        msg.textContent = e.message || 'Error';
+                    }
+                });
+            }
+        } catch (e) {
+            cont.innerHTML = `<div style="color:red;">${e.message || 'Error mostrando alineaciones'}</div>`;
+        }
+    }
+
+    function renderTablaJugadoras(lista, clubId, side) {
+        if (!Array.isArray(lista) || lista.length === 0) {
+            return '<div style="color:#888;">Sin jugadoras precargadas</div>';
+        }
+        const rows = lista.map((j, idx) => `
+            <tr${idx%2===0 ? ' style=\"background:#f7fafd;\"' : ''}>
+                <td style="text-align:center;">
+                    <button onclick="openIncidenciaModal(${clubId}, ${j.id}, '${side}')" title="Registrar incidencia" style="border:1px solid #9ec3ff;background:#fff;color:#1976d2;border-radius:6px;width:28px;height:28px;font-weight:700;cursor:pointer;">+</button>
+                </td>
+                <td style="text-align:center;">${escapeHtml(j.dni || '')}</td>
+                <td>${escapeHtml((j.apellido || '') + ' ' + (j.nombre || ''))}</td>
+                <td style="text-align:center;">-</td>
+            </tr>`).join('');
+        return `
+            <table class="alineacion-tabla" style="width:100%;border-collapse:separate;border-spacing:0 2px;box-shadow:0 1px 6px #0001;">
+                <thead>
+                    <tr style="background:#eaf3fb;">
+                        <th style="padding:6px 8px;"> </th>
+                        <th style="padding:6px 8px;">DNI</th>
+                        <th style="padding:6px 8px;">Jugador</th>
+                        <th style="padding:6px 8px;">Camiseta</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>`;
+    }
+
+    function renderCuerpoTecnicoUI(clubId, side) {
+        const sid = side === 'local' ? 'local' : 'visit';
+        return `
+        <div id="ct-${sid}" style="margin-top:12px;padding:12px;border:1px solid #e5e7eb;border-radius:8px;">
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                <div style="flex:1;min-width:280px;">
+                    <label style="font-weight:600;">Director Técnico</label>
+                    <div style="display:flex;gap:8px;">
+                        <select id="dt-${sid}-select" style="flex:1;min-width:220px;"></select>
+                        <button class="panel-btn" type="button" onclick="guardarCT('${sid}', ${clubId}, 'director_tecnico')">Guardar</button>
+                    </div>
+                </div>
+                <div style="flex:1;min-width:280px;">
+                    <label style="font-weight:600;">Preparador Físico</label>
+                    <div style="display:flex;gap:8px;">
+                        <select id="pf-${sid}-select" style="flex:1;min-width:220px;"></select>
+                        <button class="panel-btn" type="button" onclick="guardarCT('${sid}', ${clubId}, 'preparador_fisico')">Guardar</button>
+                    </div>
+                </div>
+            </div>
+            <div id="ct-${sid}-msg" style="margin-top:8px;color:#16a34a;"></div>
+        </div>`;
+    }
+
+    async function cargarCombosCT(partidoId, clubId, side) {
+        const sid = side === 'local' ? 'local' : 'visit';
+    const url = `/partidos/${encodeURIComponent(partidoId)}/cuerpo-tecnico?club_id=${encodeURIComponent(clubId)}`;
+        try {
+            const res = await fetch(url);
+            if (!res.ok) return;
+            const data = await res.json();
+            const disponibles = Array.isArray(data.disponibles) ? data.disponibles : [];
+            const seleccionados = Array.isArray(data.seleccionados) ? data.seleccionados : [];
+            const dtSel = document.getElementById(`dt-${sid}-select`);
+            const pfSel = document.getElementById(`pf-${sid}-select`);
+            const normRol = (r) => {
+                const s = (r || '').toString().normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().trim();
+                if (/(^|\W)(dt|director\s*tecnic)/.test(s)) return 'director_tecnico';
+                if (/(^|\W)(pf|preparador\s*fisic)/.test(s)) return 'preparador_fisico';
+                return s;
+            };
+            const makeOpts = (lista, filtroRol) => {
+                const opts = [`<option value="">Seleccione ${filtroRol === 'director_tecnico' ? 'DT' : 'PF'}</option>`];
+                lista.filter(p => normRol(p.rol) === filtroRol).forEach(p => {
+                    opts.push(`<option value="${p.id}">${escapeHtml(p.apellido || '')} ${escapeHtml(p.nombre || '')} (${escapeHtml(p.dni || '')})</option>`);
+                });
+                return opts.join('');
+            };
+            if (dtSel) dtSel.innerHTML = makeOpts(disponibles, 'director_tecnico');
+            if (pfSel) pfSel.innerHTML = makeOpts(disponibles, 'preparador_fisico');
+            // Preseleccionar si ya hay seleccionados y preparar tabla
+            let selDT = null, selPF = null;
+            seleccionados.forEach(s => {
+                if (s.club_id === clubId && s.rol === 'director_tecnico') selDT = s;
+                if (s.club_id === clubId && s.rol === 'preparador_fisico') selPF = s;
+            });
+            if (dtSel && selDT) dtSel.value = String(selDT.cuerpo_tecnico_id);
+            if (pfSel && selPF) pfSel.value = String(selPF.cuerpo_tecnico_id);
+
+            const byId = Object.fromEntries(disponibles.map(p => [p.id, p]));
+            const dtMember = selDT ? byId[selDT.cuerpo_tecnico_id] : null;
+            const pfMember = selPF ? byId[selPF.cuerpo_tecnico_id] : null;
+            renderCTTable(sid, dtMember, pfMember);
+
+            // Si ambos ya están elegidos, ocultar filtros
+            const filtros = document.getElementById(`ct-${sid}`);
+            if (filtros) filtros.style.display = (dtMember && pfMember) ? 'none' : '';
+        } catch {}
+    }
+
+    window.guardarCT = async function(side, clubId, rol) {
+        const partidoId = document.getElementById('partido-select').value;
+        const sid = side === 'local' ? 'local' : 'visit';
+        const sel = document.getElementById(`${rol === 'director_tecnico' ? 'dt' : 'pf'}-${sid}-select`);
+        const msg = document.getElementById(`ct-${sid}-msg`);
+        if (!sel || !sel.value) { if (msg) { msg.style.color='red'; msg.textContent='Seleccione un integrante.'; } return; }
+        msg.textContent='';
+        try {
+            const res = await fetch(`/partidos/${encodeURIComponent(partidoId)}/cuerpo-tecnico`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ club_id: clubId, rol, cuerpo_tecnico_id: parseInt(sel.value) })
+            });
+            if (!res.ok) throw new Error('No se pudo guardar');
+            msg.style.color = '#16a34a';
+            msg.textContent = 'Guardado';
+            setTimeout(()=>{ if(msg) msg.textContent=''; }, 1200);
+            await cargarCombosCT(partidoId, clubId, sid);
+        } catch(e) {
+            if (msg) { msg.style.color = 'red'; msg.textContent = e.message || 'Error'; }
+        }
+    }
+
+    function renderCTTable(sid, dtMember, pfMember) {
+        const contId = `ct-table-${sid}`;
+        let cont = document.getElementById(contId);
+        if (!cont) {
+            const filtros = document.getElementById(`ct-${sid}`);
+            cont = document.createElement('div');
+            cont.id = contId;
+            cont.style.marginTop = '12px';
+            cont.style.border = '1px solid #e5e7eb';
+            cont.style.borderRadius = '8px';
+            cont.style.padding = '8px';
+            if (filtros && filtros.parentNode) filtros.parentNode.insertBefore(cont, filtros.nextSibling);
+        }
+        const fmt = (m) => m ? `${escapeHtml(m.apellido||'')} ${escapeHtml(m.nombre||'')}` : '—';
+        cont.innerHTML = `
+            <table style="width:100%;border-collapse:separate;border-spacing:0;">
+                <thead>
+                    <tr style="background:#f3f4f6;color:#111827;">
+                        <th style="padding:8px 10px;text-align:center;">Rol</th>
+                        <th style="padding:8px 10px;text-align:center;">Integrante</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding:8px 10px;font-weight:600;text-align:center;">Director Técnico</td>
+                        <td style="padding:8px 10px;text-align:center;">${fmt(dtMember)}</td>
+                    </tr>
+                    <tr style="background:#fafafa;">
+                        <td style="padding:8px 10px;font-weight:600;text-align:center;">Preparador Físico</td>
+                        <td style="padding:8px 10px;text-align:center;">${fmt(pfMember)}</td>
+                    </tr>
+                </tbody>
+            </table>`;
+    }
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"]?/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]||c));
+    }
+
+    // Modal simple para registrar incidencias
+    window.openIncidenciaModal = function(clubId, jugadoraId, side) {
+        const partidoId = document.getElementById('partido-select').value;
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:9999;';
+        const modal = document.createElement('div');
+        modal.style.cssText = 'background:#fff;border-radius:10px;padding:16px 18px;min-width:300px;box-shadow:0 10px 30px #0003;';
+        modal.innerHTML = `
+            <h3 style="margin-top:0;margin-bottom:12px;">Registrar incidencia</h3>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+                <label>Acción
+                    <select id="inc-accion" style="width:100%;">
+                        <option value="gol">Gol</option>
+                        <option value="tarjeta">Tarjeta</option>
+                        <option value="lesion">Lesión</option>
+                    </select>
+                </label>
+                <label id="inc-color-wrap" style="display:none;">Tarjeta
+                    <select id="inc-color" style="width:100%;">
+                        <option value="verde">Verde</option>
+                        <option value="amarilla">Amarilla</option>
+                        <option value="roja">Roja</option>
+                    </select>
+                </label>
+                <label>Minuto
+                    <input id="inc-minuto" type="number" min="0" max="120" value="0" style="width:100%;" />
+                </label>
+                <div id="inc-error" style="color:red;"></div>
+                <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;">
+                    <button id="inc-cancel" class="panel-btn-secondary" type="button">Cancelar</button>
+                    <button id="inc-save" class="panel-btn" type="button">Guardar</button>
+                </div>
+            </div>`;
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        const accionSel = modal.querySelector('#inc-accion');
+        const colorWrap = modal.querySelector('#inc-color-wrap');
+        const colorSel = modal.querySelector('#inc-color');
+        const minutoInp = modal.querySelector('#inc-minuto');
+        const errDiv = modal.querySelector('#inc-error');
+        accionSel.addEventListener('change', ()=>{
+            colorWrap.style.display = accionSel.value === 'tarjeta' ? '' : 'none';
+        });
+        modal.querySelector('#inc-cancel').onclick = ()=> document.body.removeChild(overlay);
+        modal.querySelector('#inc-save').onclick = async ()=>{
+            errDiv.textContent='';
+            try{
+                const payload = { club_id: clubId, jugadora_id: jugadoraId, tipo: accionSel.value, minuto: parseInt(minutoInp.value||'0') };
+                if (accionSel.value === 'tarjeta') payload.color = colorSel.value;
+                const res = await fetch(`/partidos/${encodeURIComponent(partidoId)}/incidencias`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+                if(!res.ok){
+                    let m='No se pudo registrar';
+                    try{ const j=await res.json(); if(j.error) m=j.error; }catch{}
+                    throw new Error(m);
+                }
+                // Actualizar contadores en UI
+                if (accionSel.value === 'gol') {
+                    const span = document.getElementById(side==='local' ? 'goles-local-count' : 'goles-visit-count');
+                    if (span) span.textContent = String((parseInt(span.textContent||'0')||0) + 1);
+                } else {
+                    const map = { verde: 'verdes', amarilla: 'amarillas', roja: 'rojas' };
+                    const id = `${map[colorSel.value]}-${side}-count`;
+                    const s = document.getElementById(id);
+                    if (s) s.textContent = String((parseInt(s.textContent||'0')||0) + 1);
+                }
+                document.body.removeChild(overlay);
+            }catch(e){ errDiv.textContent = e.message || 'Error'; }
+        };
+    }
+    </script>
+</body>
+</html>
