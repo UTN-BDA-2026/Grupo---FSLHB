@@ -5,7 +5,7 @@ from app import app, db
 from app.models.noticia import Noticia
 
 titulos_a_borrar = [
-    "Torneo Juvenil: grandes promesas en acción",
+    "Convocatoria a juveniles",
 ]
 
 with app.app_context():

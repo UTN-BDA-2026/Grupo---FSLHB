@@ -159,6 +159,8 @@ document.addEventListener('DOMContentLoaded', function() {
     golesDiv.innerHTML = '';
     tarjetasDiv.innerHTML = '';
     incidenciasDiv.innerHTML = '';
+    const obsDiv = document.getElementById('control-partido-observaciones');
+    if (obsDiv) obsDiv.innerHTML = '';
     const partidoId = encuentroSelect.value;
         if (!partidoId) return;
         try {
@@ -167,10 +169,27 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!res.ok) return;
             const p = await res.json();
 
-            // 1b. Cuerpo técnico (DT/PF) para ambos clubes
+            // 1b. Cuerpo técnico (DT/PF) para ambos clubes y árbitros
             let cuerpoTecnicoPorClub = {};
             // También tendremos disponibles por club para fallback (si no hay seleccionados)
             const ctDisponiblesPorClub = {};
+            // Árbitros asignados al partido (máx 2) y fallback por club
+            let arbitrosPartido = [];
+            let arbLocal = null;
+            let arbVisit = null;
+            try {
+                const resArb = await fetch(`/partidos/${encodeURIComponent(partidoId)}/arbitros`);
+                if (resArb.ok) {
+                    const jArb = await resArb.json();
+                    // Estructura esperada: { asignados: { local: {..}, visit: {..} }, disponibles: [...] }
+                    if (jArb && jArb.asignados) {
+                        arbLocal = jArb.asignados.local || null;
+                        arbVisit = jArb.asignados.visit || null;
+                        if (arbLocal) arbitrosPartido.push(arbLocal);
+                        if (arbVisit) arbitrosPartido.push(arbVisit);
+                    }
+                }
+            } catch(_){}
             try {
                 const resCT = await fetch(`/partidos/${encodeURIComponent(partidoId)}/cuerpo-tecnico`);
                 if (resCT.ok) {
@@ -413,6 +432,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 renderJugadorasTabla(jugLocal, p.club_local_id, local) +
                 renderJugadorasTabla(jugVisit, p.club_visitante_id, visit);
 
+            // Observaciones del partido (notas)
+            try {
+                const rNota = await fetch(`/partidos/${encodeURIComponent(partidoId)}/notas`);
+                if (rNota.ok) {
+                    const jNota = await rNota.json();
+                    const detalle = (jNota.detalle || '').trim();
+                    if (detalle && obsDiv) {
+                        // escape básico
+                        const esc = s => String(s).replace(/[&<>]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch]));
+                        obsDiv.innerHTML = `<div style="max-width:980px;margin:2rem auto 0 auto;padding:1rem 1.4rem;background:#f5f8ff;border-radius:10px;box-shadow:0 1px 6px #0001;line-height:1.4;">
+                            <div style=\"font-weight:600;margin-bottom:0.4rem;\">Observaciones del Partido</div>
+                            <div style=\"white-space:pre-wrap;\">${esc(detalle)}</div>
+                        </div>`;
+                    }
+                }
+            } catch(_){}
+
             // Prepare to render cuerpo técnico info after the resumenDiv
             // We'll render this after the resumenDiv, before the golesDiv
             let cuerpoTecnicoHtml = '';
@@ -429,6 +465,19 @@ document.addEventListener('DOMContentLoaded', function() {
             // Mostrar el nombre del equipo (si existe); fallback al nombre del club
             const clubLabels = [local || p.club_local_nombre, visit || p.club_visitante_nombre];
             cuerpoTecnicoHtml += '<div style="display:flex;justify-content:center;gap:3rem;margin:1.2rem 0 0.5rem 0;flex-wrap:wrap;">';
+            // Preprocesar nombres de árbitros: se listan TODOS para ambos clubes (no hay relación por club en el modelo)
+            function formatearArbitro(obj) {
+                if (!obj) return '';
+                const a = obj.arbitro || obj; // puede venir como {arbitro:{...}} o directo
+                return `${(a.nombre||'').trim()} ${(a.apellido||'').trim()}`.trim();
+            }
+                // Para mostrar por club: usar asignación específica (local/visit) si existe; no repetir ambos.
+                function asignadoParaClub(cid) {
+                    if (arbLocal && (arbLocal.club_id === cid || arbLocal.rol === 'local')) return arbLocal;
+                    if (arbVisit && (arbVisit.club_id === cid || arbVisit.rol === 'visit')) return arbVisit;
+                    return null;
+                }
+
             for (let i = 0; i < clubIds.length; i++) {
                 const cid = clubIds[i];
                 const label = clubLabels[i];
@@ -445,6 +494,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     cuerpoTecnicoHtml += `<span style="font-weight:600;">${pretty}:</span> <span id="ct-nombre-${cid}-${rol}" style="color:${color};">${initial}</span>`;
                     cuerpoTecnicoHtml += `</li>`;
                 }
+                const arbAsignado = asignadoParaClub(cid);
+                const arbTextoBase = arbAsignado ? formatearArbitro(arbAsignado.arbitro || arbAsignado) : 'No asignado';
+                const arbColor = arbAsignado ? '#111' : '#888';
+                cuerpoTecnicoHtml += `<li style="margin-bottom:0.2rem;"><span style="font-weight:600;">Árbitro:</span> <span id="arbitro-nombre-${cid}" style="color:${arbColor};">${arbTextoBase}</span></li>`;
                 cuerpoTecnicoHtml += '</ul></div>';
             }
             cuerpoTecnicoHtml += '</div>';
@@ -464,7 +517,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         fetch(`/cuerpo-tecnico/${ctId}`).then(r=>r.ok?r.json():null).then(data=>{
                             if (data && data.nombre && data.apellido) {
                                 const el = document.getElementById(`ct-nombre-${cid}-${rol}`);
-                                if (el) el.textContent = `${data.nombre} ${data.apellido}`;
+                                if (el) { el.textContent = `${data.nombre} ${data.apellido}`; el.style.color = '#111'; }
                             }
                         });
                     } else {
@@ -487,9 +540,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                         if (candidatos.length === 1) {
                             const el = document.getElementById(`ct-nombre-${cid}-${rol}`);
-                            if (el) el.textContent = `${candidatos[0].nombre || ''} ${candidatos[0].apellido || ''} (del club)`;
+                            if (el) { el.textContent = `${candidatos[0].nombre || ''} ${candidatos[0].apellido || ''}`; el.style.color = '#111'; }
                         }
                     }
+                }
+                // Fallback: si no hay árbitros del partido, usar árbitro por defecto del club
+                const arbSpan = document.getElementById(`arbitro-nombre-${cid}`);
+                if (arbSpan && arbSpan.textContent === 'No asignado') {
+                    fetch(`/clubs/${cid}/arbitro`).then(r=>r.ok?r.json():null).then(data=>{
+                        if (data && data.nombre && data.apellido) {
+                            arbSpan.textContent = `${data.nombre} ${data.apellido}`;
+                            arbSpan.style.color = '#111';
+                        }
+                    }).catch(()=>{});
                 }
             }
             detalleSection.style.display = 'block';

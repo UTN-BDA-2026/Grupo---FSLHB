@@ -26,3 +26,15 @@ class ArbitroRepositorio:
         db.session.delete(arb)
         db.session.commit()
         return True
+
+    @staticmethod
+    def actualizar(id: int, nombre: str | None = None, apellido: str | None = None) -> Arbitro | None:
+        arb = Arbitro.query.get(id)
+        if not arb:
+            return None
+        if nombre is not None:
+            arb.nombre = nombre
+        if apellido is not None:
+            arb.apellido = apellido
+        db.session.commit()
+        return arb

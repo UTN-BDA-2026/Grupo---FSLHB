@@ -1,4 +1,5 @@
 from flask import Blueprint, request, make_response, render_template, jsonify
+from app import require_admin, csrf
 incidencia_bp = Blueprint('incidencia', __name__)
 
 @incidencia_bp.route('/ranking/tarjetas/excel', methods=['GET'])
@@ -154,9 +155,6 @@ def ranking_resumen():
     categoria = request.args.get('categoria')
     fecha = request.args.get('fecha', type=int)
     datos = IncidenciaService.ranking_resumen(torneo, categoria, fecha)
-    # Fallback: si no hay datos y se especificó torneo, probar solo por categoría
-    if (not datos or len(datos) == 0) and torneo:
-        datos = IncidenciaService.ranking_resumen(None, categoria, fecha)
     goleadores = {}
     amarillas = {}
     rojas = {}
@@ -181,7 +179,10 @@ def ranking_resumen():
             elif inc.color == 'roja':
                 rojas[key] = rojas.get(key, 0) + 1
     def ordenar(dic):
-        return [ {'club': k[0], 'jugador': k[1], 'cantidad': v} for k,v in sorted(dic.items(), key=lambda x: -x[1]) ]
+        return [
+            {'club': k[0], 'jugador': k[1], 'cantidad': v}
+            for k, v in sorted(dic.items(), key=lambda x: -x[1])
+        ]
     return jsonify({
         'goleadores': ordenar(goleadores),
         'amarillas': ordenar(amarillas),
@@ -254,3 +255,66 @@ def descargar_goleadores_excel():
     filename = f"goleadores_{(torneo or 'torneo').replace(' ', '_')}_{(categoria or 'categoria').replace(' ', '_')}.xlsx"
     resp.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
     return resp
+
+
+@incidencia_bp.route('/admin/jugadoras/<int:jugadora_id>/incidencias', methods=['GET'])
+@require_admin
+def listar_incidencias_por_jugadora_admin(jugadora_id: int):
+    """Devuelve las incidencias de tipo tarjeta de una jugadora para uso del panel admin."""
+    incidencias = IncidenciaService.listar_tarjetas_por_jugadora(jugadora_id)
+
+    from app.repositories.partido_repositorio import PartidoRepository
+
+    resultado = []
+    for inc in incidencias:
+        partido = PartidoRepository.buscar_por_id(inc.partido_id)
+        resultado.append({
+            'id': inc.id,
+            'partido_id': inc.partido_id,
+            'tipo': inc.tipo,
+            'color': getattr(inc, 'color', None),
+            'minuto': inc.minuto,
+            'torneo': getattr(partido, 'torneo', None) if partido else None,
+            'categoria': getattr(partido, 'categoria', None) if partido else None,
+            'fecha_numero': getattr(partido, 'fecha_numero', None) if partido else None,
+            'club_local_nombre': getattr(getattr(partido, 'club_local', None), 'nombre', None) if partido else None,
+            'club_visitante_nombre': getattr(getattr(partido, 'club_visitante', None), 'nombre', None) if partido else None,
+        })
+
+    return jsonify(resultado)
+
+
+@incidencia_bp.route('/admin/jugadoras/<int:jugadora_id>/incidencias', methods=['POST'])
+@csrf.exempt
+@require_admin
+def crear_incidencia_tarjeta_admin(jugadora_id: int):
+    """Crea una incidencia de tipo tarjeta para una jugadora desde el panel admin."""
+    data = request.get_json(silent=True) or {}
+    partido_id = data.get('partido_id')
+    club_id = data.get('club_id')
+    color = data.get('color')
+    minuto = data.get('minuto')
+
+    if not partido_id or not club_id:
+        return jsonify({'error': 'partido_id y club_id son obligatorios'}), 400
+
+    if color not in ('verde', 'amarilla', 'roja'):
+        return jsonify({'error': 'Color de tarjeta inválido'}), 400
+
+    try:
+        inc = IncidenciaService.registrar_tarjeta(partido_id=int(partido_id), club_id=int(club_id), jugadora_id=jugadora_id, color=color, minuto=minuto)
+    except Exception as exc:
+        return jsonify({'error': 'No se pudo registrar la tarjeta', 'detail': str(exc)}), 500
+
+    return jsonify({'id': inc.id}), 201
+
+
+@incidencia_bp.route('/admin/incidencias/<int:incidencia_id>', methods=['DELETE'])
+@csrf.exempt
+@require_admin
+def eliminar_incidencia_admin(incidencia_id: int):
+    """Elimina una incidencia por id para el panel admin."""
+    ok = IncidenciaService.eliminar_por_id(incidencia_id)
+    if not ok:
+        return jsonify({'error': 'Incidencia no encontrada'}), 404
+    return jsonify({'ok': True})

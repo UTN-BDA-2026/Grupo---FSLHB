@@ -11,14 +11,19 @@ def get_db_url() -> str:
 def restore(dump_file: str):
     if not os.path.exists(dump_file):
         raise FileNotFoundError(dump_file)
-    db_url = get_db_url()
-    if not db_url:
-        raise RuntimeError('No hay DATABASE_URL/PROD_DATABASE_URI/DEV_DATABASE_URI definido en el entorno.')
 
-    # Requiere pg_restore
-    cmd = f"pg_restore --clean --if-exists --no-owner --no-privileges --dbname={shlex.quote(db_url)} {shlex.quote(dump_file)}"
-    print(f"Ejecutando: {cmd}")
-    subprocess.check_call(cmd, shell=True)
+    # En este proyecto la base corre en Docker (servicio "db").
+    # Usamos pg_restore dentro del contenedor para no depender de
+    # tener las herramientas de PostgreSQL instaladas en Windows.
+    cmd = [
+        'docker-compose', 'exec', '-T', 'db',
+        'pg_restore', '--clean', '--if-exists', '--no-owner', '--no-privileges',
+        '-U', 'hockeyuser', '-d', 'hockey', '-'
+    ]
+    print("Restaurando base dentro del contenedor 'db' con pg_restore...")
+    print('Comando:', ' '.join(shlex.quote(c) for c in cmd))
+    with open(dump_file, 'rb') as f:
+        subprocess.check_call(cmd, stdin=f)
     print("Restore OK")
 
 

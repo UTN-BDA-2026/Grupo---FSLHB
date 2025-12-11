@@ -341,3 +341,18 @@ nav ul {
         font-size: 0.78rem;
     }
 }
+
+/* Brand header sizing for mobile */
+@media (max-width: 600px) {
+    header .header-brand {
+        gap: 12px !important;
+        padding: 6px 10px 0 10px;
+    }
+    header .header-brand img {
+        height: 56px !important;
+        max-width: 120px !important;
+    }
+    header .header-brand .brand-lines span {
+        font-size: 1.15rem !important;
+    }
+}

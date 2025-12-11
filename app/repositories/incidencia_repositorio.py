@@ -43,11 +43,11 @@ class IncidenciaRepository:
         from app.models.partido import Partido  # import local para evitar ciclos
         q = db.session.query(Incidencia).join(Partido, Partido.id == Incidencia.partido_id)
         if torneo:
-            # Permitir coincidencia parcial y sin sensibilidad a mayúsculas
-            q = q.filter(Partido.torneo.ilike(f"%{torneo}%"))
+            # Coincidencia exacta por nombre de torneo
+            q = q.filter(Partido.torneo == torneo)
         if categoria:
-            # Permitir coincidencia parcial y sin sensibilidad a mayúsculas
-            q = q.filter(Partido.categoria.ilike(f"%{categoria}%"))
+            # Coincidencia exacta por categoría
+            q = q.filter(Partido.categoria == categoria)
         if fecha_hasta is not None:
             try:
                 fh = int(fecha_hasta)
@@ -55,3 +55,32 @@ class IncidenciaRepository:
             except Exception:
                 pass
         return q.all()
+
+    @staticmethod
+    def eliminar(partido_id: int, incidencia_id: int) -> bool:
+        """Elimina una incidencia por id verificando que pertenezca al partido indicado.
+        Devuelve True si se eliminó, False si no se encontró."""
+        inc = db.session.query(Incidencia).filter_by(id=incidencia_id, partido_id=partido_id).first()
+        if not inc:
+            return False
+        db.session.delete(inc)
+        db.session.commit()
+        return True
+
+    @staticmethod
+    def listar_tarjetas_por_jugadora(jugadora_id: int):
+        return (
+            db.session.query(Incidencia)
+            .filter_by(jugadora_id=jugadora_id, tipo='tarjeta')
+            .order_by(Incidencia.created_at.asc())
+            .all()
+        )
+
+    @staticmethod
+    def eliminar_por_id(incidencia_id: int) -> bool:
+        inc = db.session.query(Incidencia).filter_by(id=incidencia_id).first()
+        if not inc:
+            return False
+        db.session.delete(inc)
+        db.session.commit()
+        return True

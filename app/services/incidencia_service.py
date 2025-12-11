@@ -37,3 +37,15 @@ class IncidenciaService:
     @staticmethod
     def ranking_resumen(torneo: str | None, categoria: str | None, fecha_hasta: int | None = None):
         return IncidenciaRepository.ranking_resumen(torneo, categoria, fecha_hasta)
+
+    @staticmethod
+    def eliminar(partido_id: int, incidencia_id: int) -> bool:
+        return IncidenciaRepository.eliminar(partido_id, incidencia_id)
+
+    @staticmethod
+    def listar_tarjetas_por_jugadora(jugadora_id: int):
+        return IncidenciaRepository.listar_tarjetas_por_jugadora(jugadora_id)
+
+    @staticmethod
+    def eliminar_por_id(incidencia_id: int) -> bool:
+        return IncidenciaRepository.eliminar_por_id(incidencia_id)

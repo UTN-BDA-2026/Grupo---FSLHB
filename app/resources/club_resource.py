@@ -4,11 +4,13 @@ from app.models import Club
 from app.services.club_service import ClubService
 from app.services.arbitro_service import ArbitroService
 from app.mappings.club_mapping import ClubMapping
+from app import require_admin
 
 clubs_bp = Blueprint('clubs', __name__)
 club_schema = ClubMapping()
 
 @clubs_bp.route('/clubs', methods=['POST'])
+@require_admin
 def crear():
     club = club_schema.load(request.get_json())
     ClubService.crear(club)
@@ -27,6 +29,7 @@ def buscar_por_id(id):
     return club_schema.dump(club), 200
 
 @clubs_bp.route('/clubs/<int:id>', methods=['PUT'])
+@require_admin
 def actualizar(id):
     club = ClubService.buscar_por_id(id)
     if not club:
@@ -37,6 +40,7 @@ def actualizar(id):
     return club_schema.dump(club), 200
 
 @clubs_bp.route('/clubs/<int:id>', methods=['DELETE'])
+@require_admin
 def borrar_por_id(id):
     club = ClubService.borrar_por_id(id)
     if not club:

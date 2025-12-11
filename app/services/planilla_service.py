@@ -10,6 +10,12 @@ from app.models.partido import Partido
 from app.services.partido_service import PartidoService
 from app.services.precarga_service import PrecargaService
 from app.services.incidencia_service import IncidenciaService
+from app.services.cuerpo_tecnico_partido_service import CuerpoTecnicoPartidoService
+from app.services.cuerpo_tecnico_service import CuerpoTecnicoService
+from app.services.arbitro_partido_service import ArbitroPartidoService
+from app.services.nota_partido_service import NotaPartidoService
+from app.models.cuerpo_tecnico import CuerpoTecnico
+from app.services.club_service import ClubService
 
 
 PLANILLA_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), '..', 'planilla', 'PLANILLA.pdf')
@@ -19,7 +25,7 @@ PLANILLAS_OUTPUT_DIR = os.path.join(os.path.dirname(__file__), '..', 'static', '
 # Referencia: página A4, origen abajo-izquierda. Tocar solo si se ve corrido.
 POS = {
     'header': {
-        'fecha_nro': (35, 264),
+        'fecha_nro': (26, 264),
         'division': (53.5, 264),
         'cancha':   (97.5, 264),
         'hora':     (144, 264),
@@ -34,36 +40,45 @@ POS = {
         'start_y': 240,
         'row_h': 6.4,
         'n_center': 4.8,
-        'apellido': 4, # Si aumento se mueve mas hacia la derecha
-        'nombre': 28,      # más a la izquierda para centrar en NOMBRE/S
-        'dni_center': 56,  # más a la izquierda para centrar en D.N.I.
-        'v_center': 86,
-        'a_center': 92,
-        'r_center': 98,
+        'apellido': 0, # Si aumento se mueve mas hacia la derecha
+        'nombre': 23,      # más a la izquierda para centrar en NOMBRE/S
+        'dni_center': 53,  # más a la izquierda para centrar en D.N.I.
+        'v_center': 69.5, #modifica la tarjeta verde
+        'a_center': 92, #modifica la tarjeta amarilla
+        'r_center': 98, #modifica la tarjeta roja
     },
     'lista_right': {
         'base_x': 112,
         'start_y': 240,
         'row_h': 6.4,
         'n_center': 4.8,
-        'apellido': 2,
-        'nombre': 25,
-        'dni_center': 55,
+        'apellido': -4,
+        'nombre': 21.5,
+        'dni_center': 50,
         'v_center': 86,
-        'a_center': 92,
-        'r_center': 98,
+        'a_center': 74,
+        'r_center': 80,
     },
-    'goles_left': {
-        'x': 18,
-        'y_start': 65,
-        'row_h': 6.6,
-        'offs': {'n':0,'jug':8,'eq':55,'min':70,'par':86}
+    # Campos adicionales a completar en la planilla
+    'ct_left': {
+        'entrenador': (31, 117),      # desplazado a la derecha del rótulo "ENTRENADOR:"
+        'ayudante':   (44, 116),      # desplazado a la derecha del rótulo "AYUDANTE TÉCNICO:"
+        'capitan':    (24, 109),      # opcional si se usa más adelante
     },
-    'goles_right': {
-        'x': 112,
-        'y_start': 65,
-        'row_h': 6.6,
-        'offs': {'n':0,'jug':8,'eq':55,'min':70,'par':86}
+    'ct_right': {
+        'entrenador': (131, 117),     # desplazado a la derecha del rótulo en columna derecha
+        'ayudante':   (146, 116),
+        'capitan':    (126, 109),
+    },
+    'arbitros': {
+        'left':  (35, 52.5),            # texto a la derecha del rótulo "ARBITRO:" (izquierda)
+        'right': (135, 52.5),           # texto a la derecha del rótulo "ARBITRO:" (derecha)
+    },
+    'observaciones': {
+        'start_x': 8,                # Texto libre a la derecha de "OBSERVACIONES:"
+        'start_y': 35,
+        'max_width_mm': 150,          # ancho aprox. util
+        'line_h': 5.0,
     }
 }
 
@@ -125,9 +140,114 @@ def generar_planilla_pdf(partido_id: int) -> str:
     # Incidencias
     incidencias = IncidenciaService.listar(partido_id) or []
 
+    # Cuerpo técnico seleccionados (DT y PF por club)
+    ct_sel = CuerpoTecnicoPartidoService.listar_por_partido(partido_id) or []
+    def _norm_rol(s: str | None) -> str | None:
+        if not s:
+            return None
+        t = str(s).strip().lower()
+        # normalizar variantes comunes
+        t = t.replace('-', ' ').replace('_', ' ')
+        t = ' '.join(t.split())
+        # mapear sinónimos habituales
+        if (
+            t in ('dt', 'director tecnico', 'director', 'directortecnico', 'director tecnico.', 'd.t.', 'd t')
+            or 'director' in t or 'entrenador' in t
+        ):
+            return 'director_tecnico'
+        if (
+            t in ('pf', 'preparador fisico', 'preparador', 'preparadorfisico', 'preparador fisico.', 'p.f.', 'p f')
+            or 'ayudante' in t or 'fisico' in t
+        ):
+            return 'preparador_fisico'
+        return t
+    def _ct_name(ct_id):
+        try:
+            row = CuerpoTecnico.query.get(int(ct_id)) if ct_id else None
+            if not row:
+                return ''
+            return f"{row.apellido} {row.nombre}".strip()
+        except Exception:
+            return ''
+    dt_local = pf_local = dt_visit = pf_visit = ''
+    for r in ct_sel:
+        try:
+            roln = _norm_rol(getattr(r, 'rol', None))
+            if r.club_id == getattr(p, 'club_local_id', None):
+                if roln == 'director_tecnico':
+                    dt_local = _ct_name(r.cuerpo_tecnico_id)
+                elif roln == 'preparador_fisico':
+                    pf_local = _ct_name(r.cuerpo_tecnico_id)
+            elif r.club_id == getattr(p, 'club_visitante_id', None):
+                if roln == 'director_tecnico':
+                    dt_visit = _ct_name(r.cuerpo_tecnico_id)
+                elif roln == 'preparador_fisico':
+                    pf_visit = _ct_name(r.cuerpo_tecnico_id)
+        except Exception:
+            continue
+
+    # Fallback: si no hay DT seleccionado en el partido, usar el DT del club (rol 'DT')
+    try:
+        if not dt_local and getattr(p, 'club_local_id', None):
+            lista_ct_local = CuerpoTecnicoService.listar(getattr(p, 'club_local_id', None)) or []
+            for ct in lista_ct_local:
+                if str(getattr(ct, 'rol', '')).upper() == 'DT':
+                    dt_local = f"{getattr(ct,'apellido','')} {getattr(ct,'nombre','')}".strip()
+                    break
+        if not dt_visit and getattr(p, 'club_visitante_id', None):
+            lista_ct_visit = CuerpoTecnicoService.listar(getattr(p, 'club_visitante_id', None)) or []
+            for ct in lista_ct_visit:
+                if str(getattr(ct, 'rol', '')).upper() == 'DT':
+                    dt_visit = f"{getattr(ct,'apellido','')} {getattr(ct,'nombre','')}".strip()
+                    break
+    except Exception:
+        pass
+
+    # Árbitros del partido (hasta 2)
+    arbitros = []
+    try:
+        for row in ArbitroPartidoService.listar(partido_id) or []:
+            if isinstance(row, dict):
+                a = row.get('arbitro', {})
+                nom = f"{a.get('apellido','')} {a.get('nombre','')}".strip()
+            else:
+                a = getattr(row, 'arbitro', None)
+                if a is not None:
+                    nom = f"{getattr(a,'apellido','')} {getattr(a,'nombre','')}".strip()
+                else:
+                    nom = ''
+            if nom:
+                arbitros.append(nom)
+    except Exception:
+        arbitros = []
+
+    # Fallback: si el partido no tiene árbitros asignados, usar árbitros por defecto de cada club
+    if not arbitros:
+        try:
+            arb_local = ClubService.obtener_arbitro(getattr(p, 'club_local_id', None)) if getattr(p, 'club_local_id', None) else None
+            arb_visit = ClubService.obtener_arbitro(getattr(p, 'club_visitante_id', None)) if getattr(p, 'club_visitante_id', None) else None
+            if arb_local:
+                nombre = f"{getattr(arb_local,'apellido','')} {getattr(arb_local,'nombre','')}".strip()
+                if nombre:
+                    arbitros.append(nombre)
+            if arb_visit:
+                nombre = f"{getattr(arb_visit,'apellido','')} {getattr(arb_visit,'nombre','')}".strip()
+                if nombre:
+                    arbitros.append(nombre)
+        except Exception:
+            pass
+
+    # Observaciones
+    try:
+        nota = NotaPartidoService.obtener(partido_id)
+        observaciones = getattr(nota, 'detalle', '') or ''
+    except Exception:
+        observaciones = ''
+
     # Conteo por jugadora (tarjetas/goles)
     tarjetas_por_jug = {}
-    goles_ordenados = []  # (min, club_id, jugadora_nombre)
+    # Eliminamos el renderizado de la tabla de goles en la planilla
+    goles_ordenados = []
     for inc in incidencias:
         if inc.tipo == 'tarjeta':
             key = int(_get(inc, 'jugadora_id')) if _get(inc, 'jugadora_id') is not None else None
@@ -138,15 +258,7 @@ def generar_planilla_pdf(partido_id: int) -> str:
             if col.startswith('ver'): d['v'] += 1
             elif col.startswith('ama'): d['a'] += 1
             elif col.startswith('roj'): d['r'] += 1
-        elif inc.tipo == 'gol':
-            nombre = ''
-            # busco nombre en listas
-            for arr in (jug_local, jug_visit):
-                for j in arr:
-                    if _get(j, 'id') == _get(inc, 'jugadora_id'):
-                        nombre = f"{_get(j, 'apellido', '')} {_get(j, 'nombre', '')}".strip()
-                        break
-            goles_ordenados.append((_get(inc, 'minuto', None), _get(inc, 'club_id', None), nombre))
+        # Se omite el procesamiento de goles para no dibujarlos
 
     goles_ordenados.sort(key=lambda x: (x[0] is None, x[0]))
 
@@ -225,31 +337,41 @@ def generar_planilla_pdf(partido_id: int) -> str:
     draw_lista(POS['lista_left'], jug_local)
     draw_lista(POS['lista_right'], jug_visit)
 
-    # Goles (tabla inferior): N°, JUGADOR, EQUIPO, TIEMPO, PARCIAL
-    goles_local = 0
-    goles_visit = 0
-    y_gol_left = POS['goles_left']['y_start']
-    y_gol_right = POS['goles_right']['y_start']
-    for idx, (minuto, club_id, nombre) in enumerate(goles_ordenados, start=1):
-        equipo_lbl = 'LOC' if club_id == getattr(p, 'club_local_id', None) else 'VIS'
-        if equipo_lbl == 'LOC':
-            goles_local += 1
-        else:
-            goles_visit += 1
-        parcial = f"{goles_local} - {goles_visit}"
-        # izquierda ocupa 7 filas aprox; luego derecha
-        if idx <= 7:
-            x = POS['goles_left']['x']; y = y_gol_left
-            y_gol_left -= POS['goles_left']['row_h']
-        else:
-            x = POS['goles_right']['x']; y = y_gol_right
-            y_gol_right -= POS['goles_right']['row_h']
-        offs = POS['goles_left']['offs']
-        _draw_text(c, x + offs['n'], y, str(idx), 9, scale_x=scale_x, scale_y=scale_y)
-        _draw_text(c, x + offs['jug'], y, nombre or '', 9, scale_x=scale_x, scale_y=scale_y)
-        _draw_text(c, x + offs['eq'], y, equipo_lbl, 9, scale_x=scale_x, scale_y=scale_y)
-        _draw_text(c, x + offs['min'], y, _string(minuto) if minuto is not None else '', 9, scale_x=scale_x, scale_y=scale_y)
-        _draw_text(c, x + offs['par'], y, parcial, 9, scale_x=scale_x, scale_y=scale_y)
+    # Se omite la sección de dibujo de goles en la planilla
+
+    # Cuerpo técnico: mostrar solo Director Técnico (no imprimir Ayudante/Preparador Físico)
+    _draw_text(c, *POS['ct_left']['entrenador'], dt_local, 9, scale_x=scale_x, scale_y=scale_y)
+    _draw_text(c, *POS['ct_right']['entrenador'], dt_visit, 9, scale_x=scale_x, scale_y=scale_y)
+
+    # Árbitros (primero a izquierda, segundo a derecha). Solo nombres; el rótulo ya está impreso.
+    if arbitros:
+        _draw_text(c, *POS['arbitros']['left'], arbitros[0], 9, scale_x=scale_x, scale_y=scale_y)
+        if len(arbitros) > 1:
+            _draw_text(c, *POS['arbitros']['right'], arbitros[1], 9, scale_x=scale_x, scale_y=scale_y)
+    
+    # Observaciones (envolviendo en varias líneas si excede)
+    if observaciones:
+        max_w = POS['observaciones']['max_width_mm'] * scale_x * mm
+        x0 = POS['observaciones']['start_x'] * scale_x
+        y0 = POS['observaciones']['start_y'] * scale_y
+        # partir por palabras usando ancho textual
+        words = str(observaciones).split()
+        line = ''
+        lines = []
+        for w in words:
+            test = f"{line} {w}".strip()
+            if c.stringWidth(test, 'Helvetica', 9) <= max_w:
+                line = test
+            else:
+                if line:
+                    lines.append(line)
+                line = w
+        if line:
+            lines.append(line)
+        y = y0
+        for ln in lines[:5]:  # limitar a 5 líneas para no invadir márgenes
+            _draw_text(c, x0, y, ln, 9, scale_x=1.0, scale_y=1.0)
+            y -= POS['observaciones']['line_h']
 
     c.save()
 

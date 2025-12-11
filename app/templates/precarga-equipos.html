@@ -21,12 +21,16 @@
             </a>
             <ul class="panel-nav-dropdown" id="admin-plantel-dropdown">
                 <li><a href="/precarga-equipos" class="panel-nav-dropdown-item">Precarga de Equipos</a></li>
+                {% if current_user.is_authenticated and current_user.puede_cargar_incidencias %}
+                <li><a href="/carga-incidencias" class="panel-nav-dropdown-item">Carga de incidencias</a></li>
+                {% endif %}
                 <li><a href="/control-partido" class="panel-nav-dropdown-item">Control Partido</a></li>
                 <li><a href="/crear-lista-buena-fe" class="panel-nav-dropdown-item">Crear Lista de Buena Fe</a></li>
                 <li><a href="/jugadores" class="panel-nav-dropdown-item">Jugadores</a></li>
                 <li><a href="#" class="panel-nav-dropdown-item">Tribunal de Penas</a></li>
             </ul>
         </div>
+        {% if current_user.is_authenticated and not current_user.is_operador %}
         <div class="panel-nav-dropdown-container">
             <a href="#" class="panel-nav-link panel-nav-dropdown-toggle" id="param-club-link">
                 <span class="label-long">Parámetros del Club</span>
@@ -41,6 +45,7 @@
                 <li><a href="#" class="panel-nav-dropdown-item">Tabla de Usuarios</a></li>
             </ul>
         </div>
+        {% endif %}
         <span class="panel-nav-club" id="nombre-club-nav"></span>
     <a href="/login" class="salir-link" title="Salir"><i class="fas fa-sign-out-alt" aria-hidden="true"></i></a>
     </nav>
@@ -58,9 +63,7 @@
                 <div class="panel-torneo-form-group">
                     <label for="torneo-select"><b>Torneo:</b></label>
                     <select id="torneo-select" name="torneo" required>
-                        <option value="Clausura Damas (2025)">Clausura Damas (2025)</option>
-                        <option value="Clausura Caballeros (2025)">Clausura Caballeros (2025)</option>
-                        <option value="Clausura Mamis (2025)">Clausura Mamis (2025)</option>
+                        <option value="">Seleccione Torneo</option>
                     </select>
                 </div>
                 <div class="panel-torneo-form-group">

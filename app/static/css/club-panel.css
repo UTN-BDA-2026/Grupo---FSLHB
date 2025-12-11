@@ -30,6 +30,9 @@
     margin-top: 0.7rem;
     letter-spacing: 0.5px;
 }
+.panel-menu-group-jugadores {
+    width: 100%;
+}
 .panel-menu a {
     background: #006400;
     color: #fff;

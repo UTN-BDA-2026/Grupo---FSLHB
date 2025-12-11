@@ -32,7 +32,6 @@ function renderTablaPosiciones(torneo, division, fecha, bloque) {
               <th>GF</th>
               <th>GC</th>
               <th>Dif</th>
-              <th style="min-width:60px;">Bonus</th>
               <th class="puntos-col">Pts</th>
             </tr>
           </thead>
@@ -51,7 +50,6 @@ function renderTablaPosiciones(torneo, division, fecha, bloque) {
           <td>${row.gf}</td>
           <td>${row.gc || row.ge || 0}</td>
           <td>${row.dif > 0 ? '+' : ''}${row.dif}</td>
-          <td>${row.bonus || 0}</td>
           <td class="puntos-col">${row.pts}</td>
         </tr>`;
       }

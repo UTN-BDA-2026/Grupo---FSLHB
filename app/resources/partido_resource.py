@@ -14,6 +14,10 @@ from app.services.planilla_service import generar_planilla_pdf
 from app.services.sancion_service import SancionService
 from app.services.arbitro_service import ArbitroService
 from app.services.arbitro_partido_service import ArbitroPartidoService
+from app.services.partido_fixture_service import cargar_partidos_desde_csv_fileobj
+from app import require_admin, csrf
+from app.services.partido_fixture_service import cargar_partidos_desde_csv_fileobj
+from app import require_admin
 
 partido_bp = Blueprint('partido', __name__)
 
@@ -77,11 +81,40 @@ def obtener_partido(id: int):
             'club_visitante_nombre': cl_visit.nombre if cl_visit else None,
             'equipo_local_nombre': p.equipo_local.nombre if p.equipo_local else None,
             'equipo_visitante_nombre': p.equipo_visitante.nombre if p.equipo_visitante else None,
+            'equipo_local_categoria': p.equipo_local.categoria if p.equipo_local else None,
+            'equipo_visitante_categoria': p.equipo_visitante.categoria if p.equipo_visitante else None,
             'estado': p.estado,
             'goles_local': p.goles_local,
             'goles_visitante': p.goles_visitante
         }
     return jsonify(dump_detalle(p))
+
+@partido_bp.route('/partidos/<int:id>/debug', methods=['GET'])
+def debug_partido(id: int):
+    """Endpoint de depuración: muestra enlaces entre partido, clubes y equipos."""
+    p = PartidoService.obtener_por_id(id)
+    if not p:
+        return jsonify({'error': 'No encontrado'}), 404
+    def dump_equipo(e):
+        if not e:
+            return None
+        return {
+            'id': e.id,
+            'nombre': e.nombre,
+            'categoria': e.categoria,
+            'club_id': e.club_id
+        }
+    return jsonify({
+        'partido_id': p.id,
+        'torneo': p.torneo,
+        'partido_categoria': p.categoria,
+        'club_local_id': p.club_local_id,
+        'club_visitante_id': p.club_visitante_id,
+        'club_local_nombre': p.club_local.nombre if p.club_local else None,
+        'club_visitante_nombre': p.club_visitante.nombre if p.club_visitante else None,
+        'equipo_local': dump_equipo(p.equipo_local),
+        'equipo_visitante': dump_equipo(p.equipo_visitante),
+    })
 
 @partido_bp.route('/partidos', methods=['POST'])
 def crear_partido():
@@ -199,11 +232,23 @@ def descargar_planilla(id: int):
 
 @partido_bp.route('/partidos/<int:id>/arbitros', methods=['GET', 'PUT'])
 def arbitros_partido(id: int):
-    """GET: devuelve árbitros asignados al partido y la lista de disponibles.
-    PUT: setea la lista de árbitros del partido (máx 2). Cuerpo: { arbitro_ids: [..] }
+    """GET: devuelve árbitros asignados por equipo y la lista de disponibles.
+    PUT: setea árbitro por equipo. Cuerpo: { local_id: <int|null>, visit_id: <int|null> }
     """
     if request.method == 'GET':
         asignados = ArbitroPartidoService.listar(id)
+        # obtener datos del partido para identificar clubs
+        from app.services.partido_service import PartidoService
+        p = PartidoService.obtener_por_id(id)
+        local_id = getattr(p, 'club_local_id', None)
+        visit_id = getattr(p, 'club_visitante_id', None)
+        asign_local = next((x for x in asignados if x.get('club_id') == local_id), None)
+        asign_visit = next((x for x in asignados if x.get('club_id') == visit_id), None)
+        # Fallback si la DB no tiene club_id: usar rol 'local'/'visit'
+        if not asign_local:
+            asign_local = next((x for x in asignados if x.get('rol') in ('local', f'club_{local_id}')), None)
+        if not asign_visit:
+            asign_visit = next((x for x in asignados if x.get('rol') in ('visit', f'club_{visit_id}')), None)
         disponibles = [
             {
                 'id': a.id,
@@ -212,12 +257,20 @@ def arbitros_partido(id: int):
                 'dni': a.dni,
             } for a in ArbitroService.listar()
         ]
-        return jsonify({'asignados': asignados, 'disponibles': disponibles})
+        return jsonify({'asignados': {'local': asign_local, 'visit': asign_visit}, 'disponibles': disponibles})
     else:
-        data = request.get_json() or {}
-        arbitro_ids = data.get('arbitro_ids') or []
+        data = request.get_json(silent=True) or {}
+        from app.services.partido_service import PartidoService
+        p = PartidoService.obtener_por_id(id)
+        local_club = getattr(p, 'club_local_id', None)
+        visit_club = getattr(p, 'club_visitante_id', None)
+        local_id = data.get('local_id', None)
+        visit_id = data.get('visit_id', None)
         try:
-            ArbitroPartidoService.set_lista(id, arbitro_ids)
+            if local_club is not None:
+                ArbitroPartidoService.set_por_equipo(id, local_club, (int(local_id) if local_id else None))
+            if visit_club is not None:
+                ArbitroPartidoService.set_por_equipo(id, visit_club, (int(visit_id) if visit_id else None))
             return jsonify({'ok': True})
         except ValueError as e:
             return jsonify({'error': str(e)}), 400
@@ -276,6 +329,13 @@ def incidencias_partido(id: int):
         else:
             return jsonify({'error': 'tipo inválido'}), 400
         return jsonify({'ok': True}), 201
+
+@partido_bp.route('/partidos/<int:id>/incidencias/<int:incidencia_id>', methods=['DELETE'])
+def eliminar_incidencia(id: int, incidencia_id: int):
+    ok = IncidenciaService.eliminar(id, incidencia_id)
+    if not ok:
+        return jsonify({'error': 'Incidencia no encontrada'}), 404
+    return jsonify({'ok': True})
 
 @partido_bp.route('/partidos/<int:id>/notas', methods=['GET', 'PUT'])
 def notas_partido(id: int):
@@ -343,3 +403,31 @@ def cuerpo_tecnico_partido(id: int):
             return jsonify({'error': str(e)}), 400
         except Exception as e:
             return jsonify({'error': 'No se pudo guardar', 'detail': str(e)}), 500
+
+
+@partido_bp.route('/admin/partidos/fixture', methods=['POST'])
+@csrf.exempt
+@require_admin
+def cargar_fixture_partidos_admin():
+    """Carga partidos desde un CSV subido por el panel admin.
+
+    Espera un formulario multipart con el campo 'archivo' conteniendo el CSV
+    con las mismas columnas que usa el script admin_cargar_partidos.py.
+    """
+    if 'archivo' not in request.files:
+        return jsonify({'error': 'Debe enviar un archivo CSV en el campo "archivo"'}), 400
+
+    file_storage = request.files['archivo']
+    if not file_storage.filename:
+        return jsonify({'error': 'Nombre de archivo vacío'}), 400
+
+    try:
+        import io
+
+        raw = file_storage.read()
+        text = raw.decode('utf-8-sig')
+        f = io.StringIO(text)
+        creados = cargar_partidos_desde_csv_fileobj(f)
+        return jsonify({'ok': True, 'creados': creados})
+    except Exception as exc:
+        return jsonify({'error': 'No se pudo procesar el CSV de partidos', 'detail': str(exc)}), 500

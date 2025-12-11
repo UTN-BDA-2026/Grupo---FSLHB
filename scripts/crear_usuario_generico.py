@@ -142,5 +142,6 @@ def crear_usuario_generico(username, password):
 # crear_usuario_generico('admin', 'admin123')
 
 if __name__ == '__main__':
-    # Crear usuario genérico de ejemplo
-    crear_usuario_generico('Patricia.sr', '123456')
+    pass
+    # Crear usuario genérico de ejemplo (comentado para evitar duplicados)
+    # crear_usuario_generico('Patricia.sr', 'Patricia_Sanra_2')

@@ -15,25 +15,36 @@ login_manager = LoginManager()
 csrf = CSRFProtect()
 
 
+def require_admin(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect('/login')
+        if not getattr(current_user, 'is_admin', False):
+            return render_template('403.html'), 403
+        return fn(*args, **kwargs)
+    return wrapper
+
+
 def create_app(config_name: str | None = None) -> Flask:
     app = Flask(__name__)
-
     basedir = Path(__file__).resolve().parents[2]
     env_path = os.path.join(basedir, '.env')
     if os.path.exists(env_path):
         load_dotenv(env_path)
 
-    # testing usa sqlite en memoria
+    # Selección de configuración según entorno
+    config_name = config_name or os.getenv('FLASK_ENV', 'production')
     if config_name == 'testing':
         db_uri = 'sqlite:///:memory:'
         app.config['TESTING'] = True
+    elif config_name == 'development':
+        db_uri = os.environ.get('DEV_DATABASE_URI') or 'sqlite:///dev.db'
+        app.config['DEBUG'] = True
     else:
-        db_uri = (
-            os.environ.get('DATABASE_URL')
-            or os.environ.get('PROD_DATABASE_URI')
-            or os.environ.get('DEV_DATABASE_URI')
-            or 'postgresql://hockeyuser:hockeypass@localhost:5433/hockey'
-        )
+        db_uri = os.environ.get('PROD_DATABASE_URI')
+        app.config['DEBUG'] = False
+        app.config['TESTING'] = False
     app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['PREFERRED_URL_SCHEME'] = 'https'
@@ -61,14 +72,19 @@ def create_app(config_name: str | None = None) -> Flask:
     else:
         logging.getLogger(__name__).info('CSRF protection deshabilitado.')
 
+    # CORS restringido solo en producción
     cors_origins = os.getenv('CORS_ORIGINS')
-    if cors_origins:
-        origins_list = [o.strip() for o in cors_origins.split(',') if o.strip()]
-        CORS(app, resources={r"/*": {"origins": origins_list}})
-        logging.getLogger(__name__).info(f'CORS restringido a: {origins_list}')
+    if config_name == 'production':
+        if cors_origins:
+            origins_list = [o.strip() for o in cors_origins.split(',') if o.strip()]
+            CORS(app, resources={r"/*": {"origins": origins_list}})
+            logging.getLogger(__name__).info(f'CORS restringido a: {origins_list}')
+        else:
+            CORS(app, resources={r"/*": {"origins": []}})
+            logging.getLogger(__name__).warning('CORS bloqueado (no hay CORS_ORIGINS definido)')
     else:
         CORS(app)
-        logging.getLogger(__name__).warning('CORS abierto. Definir CORS_ORIGINS para restringir en producción.')
+        logging.getLogger(__name__).warning('CORS abierto (no producción).')
 
     from app.resources.club_resource import clubs_bp
     from app.resources.jugadora_resource import jugadora_bp
@@ -86,6 +102,7 @@ def create_app(config_name: str | None = None) -> Flask:
     from app.resources.resultados_resource import resultados_bp
     from app.repositories.usuario_repositorio import UsuarioRepositorio
     from app.models.usuario import Usuario
+    from app.routes_static import static_bp
 
     login_manager.init_app(app)
     login_manager.login_view = 'login_page'
@@ -108,103 +125,9 @@ def create_app(config_name: str | None = None) -> Flask:
     app.register_blueprint(bp_cuerpo_tecnico)
     app.register_blueprint(arbitro_bp)
     app.register_blueprint(resultados_bp)
+    app.register_blueprint(static_bp)
 
-    @app.route('/')
-    def index():
-        return render_template('index.html')
-
-    @app.route('/autoridades')
-    def autoridades():
-        return render_template('autoridades.html')
-
-    @app.route('/reglamento')
-    def reglamento():
-        return render_template('reglamento.html')
-
-    @app.route('/historial')
-    def historial():
-        return render_template('historial.html')
-
-    @app.route('/contacto')
-    def contacto():
-        return render_template('contacto.html')
-
-    @app.route('/galeria')
-    def galeria():
-        return render_template('galeria.html')
-
-    @app.route('/club-panel')
-    def club_panel():
-        return render_template('club-panel.html')
-
-    @app.route('/panel-clubes')
-    @login_required
-    def panel_clubes():
-        return render_template('panel-clubes.html')
-
-    @app.route('/noticias')
-    def noticias():
-        return render_template('noticias.html')
-
-    @app.route('/calendario')
-    def calendario():
-        return render_template('calendario.html')
-
-    @app.route('/clubes')
-    def clubes():
-        return render_template('clubes.html')
-
-    @app.route('/equipos')
-    def equipos():
-        return render_template('equipos.html')
-
-    @app.route('/sponsors')
-    def sponsors():
-        return render_template('sponsors.html')
-
-    @app.route('/login')
-    def login_page():
-        return render_template('login.html')
-
-    @app.route('/precarga-equipos')
-    @login_required
-    def precarga_equipos():
-        return render_template('precarga-equipos.html')
-
-    @app.route('/crear-lista-buena-fe')
-    @login_required
-    def crear_lista_buena_fe():
-        return render_template('crear-lista-buena-fe.html')
-
-    @app.route('/jugadores')
-    @login_required
-    def jugadores():
-        return render_template('jugadores.html')
-
-    @app.route('/equipos-categorias')
-    @login_required
-    def equipos_categorias():
-        return render_template('equipos-categorias.html')
-
-    @app.route('/datos-club')
-    @login_required
-    def datos_club():
-        return render_template('datos-club.html')
-
-    @app.route('/carga-incidencias')
-    @login_required
-    def carga_incidencias():
-        return render_template('carga-incidencias.html')
-
-    @app.route('/cuerpo-tecnico')
-    @login_required
-    def cuerpo_tecnico():
-        return render_template('cuerpo-tecnico.html')
-
-    @app.route('/control-partido')
-    @login_required
-    def control_partido():
-        return render_template('control-partido.html')
+    # ...rutas estáticas eliminadas, ahora en routes_static.py...
 
     def require_permission(attr_name: str):
         def decorator(fn):
@@ -218,14 +141,29 @@ def create_app(config_name: str | None = None) -> Flask:
             return wrapper
         return decorator
 
-    app.view_functions['carga_incidencias'] = require_permission('puede_cargar_incidencias')(app.view_functions['carga_incidencias'])
-    app.view_functions['precarga_equipos'] = require_permission('puede_precargar_equipos')(app.view_functions['precarga_equipos'])
+    app.view_functions['static_pages.carga_incidencias'] = require_permission('puede_cargar_incidencias')(app.view_functions['static_pages.carga_incidencias'])
+    app.view_functions['static_pages.precarga_equipos'] = require_permission('puede_precargar_equipos')(app.view_functions['static_pages.precarga_equipos'])
 
     @app.after_request
     def set_security_headers(resp):
         resp.headers.setdefault('X-Content-Type-Options', 'nosniff')
         resp.headers.setdefault('X-Frame-Options', 'DENY')
         resp.headers.setdefault('Referrer-Policy', 'no-referrer-when-downgrade')
+        # Content Security Policy para prevenir XSS
+        # Permitir imágenes desde Cloudinary, estilos de Cloudflare y frames de Google
+        resp.headers.setdefault('Content-Security-Policy',
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://www.instagram.com; "
+            "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; "
+            "img-src 'self' data: https://res.cloudinary.com; "
+            "font-src 'self' https://cdnjs.cloudflare.com; "
+            "connect-src 'self'; "
+            "frame-src https://www.google.com https://www.facebook.com https://www.instagram.com; "
+            "frame-ancestors 'none'; "
+            "object-src 'none'; "
+            "base-uri 'self'; "
+            "form-action 'self';"
+        )
         try:
             if request.is_secure or app.config.get('SESSION_COOKIE_SECURE'):
                 resp.headers.setdefault('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
@@ -266,9 +204,13 @@ def create_app(config_name: str | None = None) -> Flask:
         url = request.url.replace('http://', 'https://', 1)
         return redirect(url, code=301)
 
+
+    # ADVERTENCIA: Usa un usuario de base de datos con privilegios mínimos en producción.
+    # Ejemplo: solo permisos de SELECT/INSERT/UPDATE/DELETE según necesidad, nunca superusuario.
+    # Las credenciales deben estar solo en variables de entorno y nunca en el código fuente.
     return app
 
 
 app = create_app()
 
-__all__ = ["create_app", "app", "db", "login_manager", "csrf"]
+__all__ = ["create_app", "app", "db", "login_manager", "csrf", "require_admin"]

@@ -16,6 +16,7 @@ class Usuario(db.Model, UserMixin):
     is_operador = db.Column(db.Boolean, nullable=False, default=False)
     puede_cargar_incidencias = db.Column(db.Boolean, nullable=False, default=False)
     puede_precargar_equipos = db.Column(db.Boolean, nullable=False, default=False)
+    is_admin = db.Column(db.Boolean, nullable=False, default=False)
 
     def __repr__(self):
         return f'<Usuario {self.username}>'

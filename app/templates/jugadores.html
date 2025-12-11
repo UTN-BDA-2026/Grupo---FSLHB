@@ -20,12 +20,17 @@
                 <i class="fas fa-caret-down"></i>
             </a>
             <ul class="panel-nav-dropdown" id="admin-plantel-dropdown">
-                <li><a href="precarga-equipos" class="panel-nav-dropdown-item">Precarga de Equipos</a></li>
+                <li><a href="/precarga-equipos" class="panel-nav-dropdown-item">Precarga de Equipos</a></li>
+                {% if current_user.is_authenticated %}
+                <li><a href="/carga-incidencias" class="panel-nav-dropdown-item">Carga de incidencias</a></li>
+                {% endif %}
+                <li><a href="/control-partido" class="panel-nav-dropdown-item">Control Partido</a></li>
                 <li><a href="/crear-lista-buena-fe" class="panel-nav-dropdown-item">Crear Lista de Buena Fe</a></li>
                 <li><a href="/jugadores" class="panel-nav-dropdown-item">Jugadores</a></li>
                 <li><a href="#" class="panel-nav-dropdown-item">Tribunal de Penas</a></li>
             </ul>
         </div>
+        {% if current_user.is_authenticated and not current_user.is_operador %}
         <div class="panel-nav-dropdown-container">
             <a href="#" class="panel-nav-link panel-nav-dropdown-toggle" id="param-club-link">
                 <span class="label-long">Parámetros del Club</span>
@@ -40,13 +45,14 @@
                 <li><a href="#" class="panel-nav-dropdown-item">Tabla de Usuarios</a></li>
             </ul>
         </div>
+        {% endif %}
         <span class="panel-nav-club" id="nombre-club-nav"></span>
     <a href="/login" class="salir-link" title="Salir"><i class="fas fa-sign-out-alt" aria-hidden="true"></i></a>
     </nav>
     <main class="panel-main">
         <h1 class="panel-titulo">Jugadores</h1>
     <!-- Filtro de categoría -->
-        <div style="margin: 0 0 1rem 0; display:flex; gap:12px; align-items:center;">
+        <div style="margin:0 0 0.75rem 0; display:flex; gap:12px; align-items:center;">
             <label for="filtro-categoria"><b>Categoría:</b></label>
             <select id="filtro-categoria">
                 <option value="">(Todas)</option>
@@ -56,6 +62,10 @@
                 <option value="CABALLEROS">CABALLEROS</option>
                 <option value="MAMIS">MAMIS</option>
             </select>
+        </div>
+        <div style="margin:0 0 1.25rem 0; display:flex; gap:12px; align-items:center;">
+            <label for="filtro-nombre"><b>Buscar:</b></label>
+            <input type="text" id="filtro-nombre" placeholder="Apellido o Nombre" style="padding:6px 8px; min-width:260px;">
         </div>
         <!-- Formulario de agregar jugadora movido a crear-lista-buena-fe.html -->
         <section class="panel-tabla-card">
@@ -69,7 +79,9 @@
                             <th>Nombre</th>
                             <th>Fecha de Nacimiento</th>
                             <th>Categoría</th>
+                            {% if current_user.is_authenticated and current_user.club_id %}
                             <th>Acciones</th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody>

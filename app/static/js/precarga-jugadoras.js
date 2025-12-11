@@ -4,31 +4,41 @@ document.addEventListener('DOMContentLoaded', function() {
     // Filtrar categorías según torneo seleccionado
     const torneoSelect = document.getElementById('torneo-select');
     const categoriaSelect = document.getElementById('categoria-select');
-    const categoriasPorTorneo = {
-        'Clausura Damas (2025)': [
+
+    // Definición de categorías por tipo de torneo (Damas / Caballeros / Mamis)
+    const categoriasPorTipo = {
+        damas: [
             { value: 'damas_a', text: 'Damas A' },
             { value: 'damas_b', text: 'Damas B' },
             { value: 'damas_c', text: 'Damas C' }
         ],
-        'Clausura Caballeros (2025)': [
+        caballeros: [
             { value: 'caballeros', text: 'Caballeros' }
         ],
-        'Clausura Mamis (2025)': [
+        mamis: [
             { value: 'mamis', text: 'Mamis' }
         ]
     };
 
+    function obtenerTipoTorneo(nombreTorneo) {
+        const n = (nombreTorneo || '').toLowerCase();
+        if (n.includes('mamis')) return 'mamis';
+        if (n.includes('caballeros')) return 'caballeros';
+        // Por defecto lo consideramos torneo de damas
+        return 'damas';
+    }
+
     function actualizarCategorias() {
-        const torneo = torneoSelect.value;
+        if (!torneoSelect || !categoriaSelect) return;
+        const tipo = obtenerTipoTorneo(torneoSelect.value);
+        const categorias = categoriasPorTipo[tipo] || [];
         categoriaSelect.innerHTML = '<option value="">Seleccione Categoría</option>';
-        if (categoriasPorTorneo[torneo]) {
-            categoriasPorTorneo[torneo].forEach(cat => {
-                const opt = document.createElement('option');
-                opt.value = cat.value;
-                opt.textContent = cat.text;
-                categoriaSelect.appendChild(opt);
-            });
-        }
+        categorias.forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat.value;
+            opt.textContent = cat.text;
+            categoriaSelect.appendChild(opt);
+        });
     }
     const form = document.getElementById('precarga-form');
     const jugadorasSection = document.getElementById('jugadoras-section');
@@ -45,6 +55,41 @@ document.addEventListener('DOMContentLoaded', function() {
     const clubPrecargaSel = document.getElementById('club-precarga-select');
     const clubPrecargaWrap = document.getElementById('club-precarga-wrapper');
     let clubTargetId = null; // club destino de la precarga (operador) o clubId (club)
+
+    // --- Cargar torneos dinámicamente desde la API ---
+    async function cargarTorneos() {
+        if (!torneoSelect) return;
+        try {
+            const resp = await fetch('/torneo/seleccion');
+            if (!resp.ok) return;
+            const torneos = await resp.json();
+            if (!Array.isArray(torneos) || torneos.length === 0) return;
+
+            const previo = torneoSelect.value;
+            torneoSelect.innerHTML = '<option value="">Seleccione Torneo</option>';
+            torneos.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.nombre;
+                opt.textContent = t.nombre;
+                torneoSelect.appendChild(opt);
+            });
+
+            // Conservar selección previa si sigue existiendo
+            if (previo) {
+                const existe = torneos.some(t => t.nombre === previo);
+                if (existe) {
+                    torneoSelect.value = previo;
+                }
+            }
+
+            // Ajustar categorías según el torneo actualmente seleccionado
+            actualizarCategorias();
+        } catch (e) {
+            console.error('No se pudieron cargar los torneos para precarga de equipos', e);
+        }
+    }
+
+    cargarTorneos();
 
     // --- Custom dropdown sobre el select nativo para forzar apertura hacia abajo ---
     const ddWrapper = document.createElement('div');
@@ -173,6 +218,7 @@ document.addEventListener('DOMContentLoaded', function() {
     torneoSelect.addEventListener('change', () => { actualizarCategorias(); cargarFechas(); cargarPartidos(); resetUI(); });
     categoriaSelect.addEventListener('change', () => { cargarFechas(); cargarPartidos(); resetUI(); });
     if (fechaSelect) fechaSelect.addEventListener('change', () => { cargarPartidos(); resetUI(); });
+    let partidoDetalle = null;
     partidoSelect.addEventListener('change', async () => {
         resetUI();
         const sel = partidoSelect.options[partidoSelect.selectedIndex];
@@ -185,6 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 try {
                     const res = await fetch(`/partidos/${encodeURIComponent(sel.value)}`);
                     const p = await res.json();
+                    partidoDetalle = p;
                     const opts = [];
                     if (p && p.club_local_id) {
                         opts.push({ id: p.club_local_id, nombre: p.equipo_local_nombre || p.club_local_nombre || 'Local' });
@@ -209,6 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
             partidoInfo.textContent = '';
             if (clubPrecargaWrap) clubPrecargaWrap.style.display = 'none';
             clubTargetId = null;
+            partidoDetalle = null;
         }
     });
 
@@ -279,7 +327,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         // Puedes agregar más filtros si lo deseas (rama, bloque, etc)
         try {
-            let url = `/jugadoras?club_id=${encodeURIComponent(targetClub)}`;
+            // Preferir filtro por equipo si está disponible y coincide con el club elegido
+            let url = null;
+            if (isOperador && partidoDetalle) {
+                const isLocal = targetClub && partidoDetalle && (parseInt(targetClub) === parseInt(partidoDetalle.club_local_id));
+                const isVisit = targetClub && partidoDetalle && (parseInt(targetClub) === parseInt(partidoDetalle.club_visitante_id));
+                if (isLocal && partidoDetalle.equipo_local_id) {
+                    url = `/jugadoras?equipo_id=${encodeURIComponent(partidoDetalle.equipo_local_id)}`;
+                } else if (isVisit && partidoDetalle.equipo_visitante_id) {
+                    url = `/jugadoras?equipo_id=${encodeURIComponent(partidoDetalle.equipo_visitante_id)}`;
+                }
+            }
+            // Si no hay equipo_id disponible, usar club_id
+            if (!url) {
+                url = `/jugadoras?club_id=${encodeURIComponent(targetClub)}`;
+            }
             const response = await fetch(url);
             if (!response.ok) throw new Error('Error al obtener jugadoras');
             let jugadoras = await response.json();

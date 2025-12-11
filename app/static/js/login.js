@@ -40,8 +40,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Guardar usuario si se desea
                 localStorage.setItem('usuario', data.username);
 
-                // Redirigir al panel
-                window.location.href = '/panel-clubes';
+                // Redirigir según tipo de usuario
+                if (data.is_admin) {
+                    window.location.href = '/admin-panel';
+                } else {
+                    window.location.href = '/panel-clubes';
+                }
             } else {
                 loginError.style.display = 'block';
             }

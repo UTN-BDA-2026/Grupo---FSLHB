@@ -28,6 +28,7 @@
                 <li><a href="#" class="panel-nav-dropdown-item">Tribunal de Penas</a></li>
             </ul>
         </div>
+        {% if current_user.is_authenticated and not current_user.is_operador %}
         <div class="panel-nav-dropdown-container">
             <a href="#" class="panel-nav-link panel-nav-dropdown-toggle" id="param-club-link">
                 <span class="label-long">Parámetros del Club</span>
@@ -42,6 +43,7 @@
                 <li><a href="#" class="panel-nav-dropdown-item">Tabla de Usuarios</a></li>
             </ul>
         </div>
+        {% endif %}
         <span class="panel-nav-club" id="nombre-club-nav"></span>
     <a href="/login" class="salir-link" title="Salir"><i class="fas fa-sign-out-alt" aria-hidden="true"></i></a>
     </nav>
@@ -86,6 +88,7 @@
             <div id="control-partido-goles" style="display:flex;justify-content:center;align-items:center;margin:2rem 0 1rem 0;gap:2rem;"></div>
             <div id="control-partido-tarjetas" style="display:flex;justify-content:center;align-items:center;gap:2rem;"></div>
             <div id="control-partido-incidencias" class="tablas-responsive" style="margin-top:2rem;"></div>
+            <div id="control-partido-observaciones" style="margin-top:1rem;"></div>
         </section>
 
         <div id="control-partido-msg" style="margin-top:1rem; color:#666;"></div>

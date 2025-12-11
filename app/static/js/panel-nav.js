@@ -31,6 +31,15 @@
     const paramLink = document.getElementById('param-club-link');
     const paramMenu = document.getElementById('param-club-dropdown');
 
+    // Ocultar opción "Crear Lista de Buena Fe" para operadores (Mesa de Control)
+    try {
+      const isOperador = localStorage.getItem('isOperador') === 'true';
+      if (isOperador) {
+        const buenaFe = document.querySelector('a[href="/crear-lista-buena-fe"]');
+        if (buenaFe) buenaFe.remove();
+      }
+    } catch(e) {}
+
     function closeAll(){
       if (adminMenu){ adminMenu.classList.remove('show'); resetInline(adminMenu); }
       if (paramMenu){ paramMenu.classList.remove('show'); resetInline(paramMenu); }

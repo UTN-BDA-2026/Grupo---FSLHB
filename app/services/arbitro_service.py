@@ -21,3 +21,13 @@ class ArbitroService:
     @staticmethod
     def eliminar(id: int) -> bool:
         return ArbitroRepositorio.eliminar(id)
+
+    @staticmethod
+    def actualizar(id: int, data: dict):
+        if not data:
+            raise ValueError('No se enviaron datos para actualizar')
+        nombre = data.get('nombre')
+        apellido = data.get('apellido')
+        if nombre is None and apellido is None:
+            raise ValueError('Debe indicar al menos nombre o apellido')
+        return ArbitroRepositorio.actualizar(id, nombre=nombre, apellido=apellido)

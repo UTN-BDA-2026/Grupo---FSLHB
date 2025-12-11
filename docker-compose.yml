@@ -2,8 +2,8 @@ services:
   traefik:
     image: traefik:v2.10
     ports:
-      - "8080:80"
-      - "8443:443"
+      - "80:80"
+      - "443:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./app/traefik/config/traefik.yml:/etc/traefik/traefik.yml:ro
@@ -40,6 +40,9 @@ services:
       PORT: 5000
       CORS_ORIGINS: "https://tudominio.com"
       ENABLE_CSRF: "true"
+      # Cloudinary: definir en .env o sustituir directamente; formato:
+      # cloudinary://<API_KEY>:<API_SECRET>@<CLOUD_NAME>
+      CLOUDINARY_URL: ${CLOUDINARY_URL}
     # El puerto ya no se expone directamente, lo maneja Traefik
     command: python run.py
     volumes:

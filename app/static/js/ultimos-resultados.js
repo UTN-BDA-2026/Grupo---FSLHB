@@ -42,6 +42,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     resultadosLista.innerHTML = '<li style="color:#d32f2f;font-weight:600;">No hay resultados para la selección.</li>';
                     return;
                 }
+                // Cuando no hay categoría seleccionada, limitar a los 5 más recientes
+                if (!categoria) {
+                    data = data.slice(0,5);
+                }
                 resultadosLista.innerHTML = data.map(r =>
                     `<li style="text-align:center;">` +
                     `<span>${r.local}</span> <span style="font-weight:bold;">${r.goles_local != null ? r.goles_local : 0}</span> : <span style="font-weight:bold;">${r.goles_visitante != null ? r.goles_visitante : 0}</span> <span>${r.visitante}</span> ` +
