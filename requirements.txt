@@ -7,9 +7,6 @@ flask-marshmallow==0.15.0
 Flask-Migrate==4.1.0
 marshmallow==3.20.1
 marshmallow-sqlalchemy==0.29.0
-weasyprint==65.1 #Tranforma texto a PDF
-python-odt-template==0.5.1
-docxtpl==0.20.0
 Flask-Hashids==1.0.3 #Usa otra libreria para generar IDs únicos
 Flask-Cors==3.0.10 #Manejo de CORS
 openpyxl==3.1.5 # Exportar Excel
