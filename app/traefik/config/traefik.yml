@@ -3,14 +3,9 @@ global:
 
 api:
   dashboard: true
-  insecure: true
+  insecure: false
 
 providers:
-  docker:
-    endpoint: "unix:///var/run/docker.sock"
-    watch: true
-    exposedByDefault: false
-
   file:
     filename: /etc/traefik/config.yml
     watch: true
@@ -21,16 +16,15 @@ log:
   format: common
 
 entryPoints:
-  redis:
-    address: ":6379"
-  postgresql:
-    address: ":5432"
   http:
     address: ":80"
-    http:
-      redirections:
-        entryPoint:
-          to: https
-          scheme: https
   https:
     address: ":443"
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: "hernanyailen@gmail.com"
+      storage: "/acme/acme.json"
+      httpChallenge:
+        entryPoint: http

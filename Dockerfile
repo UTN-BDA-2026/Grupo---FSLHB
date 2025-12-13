@@ -23,8 +23,8 @@ RUN apt-get update \
 RUN python -m pip install --upgrade pip \
 	&& python -m pip install --no-cache-dir -r requirements.txt
 
-# Expone el puerto Flask
+# Expone el puerto para la app
 EXPOSE 5000
 
-# Comando para iniciar la app (ajusta si usás run.py)
-CMD ["python", "run.py"]
+# Comando para iniciar la app con Gunicorn (producción)
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]

@@ -1,6 +1,6 @@
 services:
   traefik:
-    image: traefik:v2.10
+    image: traefik:v3.1
     ports:
       - "80:80"
       - "443:443"
@@ -9,6 +9,7 @@ services:
       - ./app/traefik/config/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./app/traefik/config/config.yml:/etc/traefik/config.yml:ro
       - ./app/traefik/certs:/etc/certs:ro
+      - traefik_acme:/acme
     restart: always
     # Configuración por archivo traefik.yml/config.yml y certificados mkcert
     labels:
@@ -38,22 +39,19 @@ services:
       FLASK_DEBUG: "0"
       HOST: 0.0.0.0
       PORT: 5000
-      CORS_ORIGINS: "https://tudominio.com"
+      SECRET_KEY: "HockeyAccionProdSecret2025!"
+      CORS_ORIGINS: "https://hockeyaccionsanrafael.com,https://www.hockeyaccionsanrafael.com"
       ENABLE_CSRF: "true"
       # Cloudinary: definir en .env o sustituir directamente; formato:
       # cloudinary://<API_KEY>:<API_SECRET>@<CLOUD_NAME>
       CLOUDINARY_URL: ${CLOUDINARY_URL}
-    # El puerto ya no se expone directamente, lo maneja Traefik
-    command: python run.py
+    # El puerto ya no se expone directamente, lo maneja Traefik.
+    # El comando de arranque por defecto se define en el Dockerfile (Gunicorn).
     volumes:
       - .:/app
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.hockey.rule=Host(`hockey.localhost`)"
-      - "traefik.http.routers.hockey.entrypoints=https"
-      - "traefik.http.routers.hockey.tls=true"
-      - "traefik.http.services.hockey.loadbalancer.server.port=5000"
+    # Traefik ahora se configura solo por archivo (config.yml), no por labels.
 
 volumes:
   pgdata:
-  
+  traefik_acme:
+

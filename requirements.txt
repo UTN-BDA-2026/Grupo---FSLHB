@@ -15,3 +15,4 @@ PyPDF2==3.0.1
 Flask-WTF==1.2.2 # CSRF y formularios seguros
 Flask-Login==0.6.3 # Autenticación basada en sesión
 cloudinary==1.41.0 # Integración CDN imágenes
+gunicorn==23.0.0

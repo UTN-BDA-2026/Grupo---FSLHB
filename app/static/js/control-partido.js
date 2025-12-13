@@ -9,6 +9,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const resumenDiv = document.getElementById('control-partido-resumen');
     const cuerpoTecnicoContainer = document.getElementById('control-partido-cuerpo-tecnico');
     const golesDiv = document.getElementById('control-partido-goles');
+    // Definición de categorías por tipo de torneo (Damas / Caballeros / Mamis)
+    const categoriasPorTipo = {
+        damas: ['Damas A', 'Damas B', 'Damas C'],
+        caballeros: ['Caballeros'],
+        mamis: ['Mamis']
+    };
+
+    function obtenerTipoTorneo(nombreTorneo) {
+        const n = (nombreTorneo || '').toLowerCase();
+        if (n.includes('mamis')) return 'mamis';
+        if (n.includes('caballeros')) return 'caballeros';
+        // Por defecto lo consideramos torneo de damas
+        return 'damas';
+    }
     // Cargar logos de clubes
     let clubesLogos = {};
     let clubesNombres = [];
@@ -22,32 +36,37 @@ document.addEventListener('DOMContentLoaded', function() {
     const msgDiv = document.getElementById('control-partido-msg');
     const incidenciasDiv = document.getElementById('control-partido-incidencias');
 
-    const categoriasPorTorneo = {
-        'Clausura Damas (2025)': [
-            { value: 'Damas A', text: 'Damas A' },
-            { value: 'Damas B', text: 'Damas B' },
-            { value: 'Damas C', text: 'Damas C' }
-        ],
-        'Clausura Caballeros (2025)': [
-            { value: 'Caballeros', text: 'Caballeros' }
-        ],
-        'Clausura Mamis (2025)': [
-            { value: 'Mamis', text: 'Mamis' }
-        ]
-    };
+    let torneosBD = [];
+    function cargarTorneos() {
+        fetch('/torneo/seleccion')
+            .then(r => r.json())
+            .then(data => {
+                torneosBD = data;
+                torneoSelect.innerHTML = '<option value="">Seleccione Torneo</option>';
+                data.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.nombre;
+                    opt.textContent = t.nombre;
+                    torneoSelect.appendChild(opt);
+                });
+            });
+    }
 
     function actualizarCategorias() {
-        const torneo = torneoSelect.value;
         categoriaSelect.innerHTML = '<option value="">Seleccione Categoría</option>';
-        if (categoriasPorTorneo[torneo]) {
-            categoriasPorTorneo[torneo].forEach(cat => {
-                const opt = document.createElement('option');
-                opt.value = cat.value;
-                opt.textContent = cat.text;
-                categoriaSelect.appendChild(opt);
-            });
-        }
+        const torneo = torneoSelect.value;
+        if (!torneo || !categoriaSelect) return;
+        const tipo = obtenerTipoTorneo(torneo);
+        const categorias = categoriasPorTipo[tipo] || [];
+        categorias.forEach(texto => {
+            const opt = document.createElement('option');
+            opt.value = texto;      // Valor igual al texto, coincide con la DB (ej: "Damas A")
+            opt.textContent = texto;
+            categoriaSelect.appendChild(opt);
+        });
     }
+
+    cargarTorneos();
 
     function limpiarFechasYEncuentros() {
         fechaSelect.innerHTML = '<option value="">Seleccione Fecha</option>';

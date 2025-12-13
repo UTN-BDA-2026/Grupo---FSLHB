@@ -42,10 +42,10 @@ POS = {
         'n_center': 4.8,
         'apellido': 0, # Si aumento se mueve mas hacia la derecha
         'nombre': 23,      # más a la izquierda para centrar en NOMBRE/S
-        'dni_center': 53,  # más a la izquierda para centrar en D.N.I.
+        'dni_center': 55,  # más a la izquierda para centrar en D.N.I.
         'v_center': 69.5, #modifica la tarjeta verde
         'a_center': 92, #modifica la tarjeta amarilla
-        'r_center': 98, #modifica la tarjeta roja
+        'r_center': 82, #modifica la tarjeta roja
     },
     'lista_right': {
         'base_x': 112,
@@ -54,7 +54,7 @@ POS = {
         'n_center': 4.8,
         'apellido': -4,
         'nombre': 21.5,
-        'dni_center': 50,
+        'dni_center': 53,
         'v_center': 86,
         'a_center': 74,
         'r_center': 80,

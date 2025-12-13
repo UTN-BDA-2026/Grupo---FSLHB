@@ -1,16 +1,29 @@
 http:
-  routers:
-    traefik:
-      rule: "Host(`traefik.localhost`)"
-      service: "api@internal"
-      tls:
-        domains:
-          - main: "hockey.localhost"
-            sans:
-              - "*.hockey.localhost"
-          - main: "traefik.localhost"
+  middlewares:
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
 
-tls:
-  certificates:
-    - certFile: "/etc/certs/cert.pem"
-      keyFile: "/etc/certs/key.pem"
+  routers:
+    hockey:
+      rule: "Host(`hockeyaccionsanrafael.com`) || Host(`www.hockeyaccionsanrafael.com`)"
+      entryPoints:
+        - https
+      tls:
+        certResolver: letsencrypt
+      service: hockey
+
+    http-catchall:
+      rule: "HostRegexp(`{host:.+}`)"
+      entryPoints:
+        - http
+      middlewares:
+        - redirect-to-https
+      service: hockey
+
+  services:
+    hockey:
+      loadBalancer:
+        servers:
+          - url: "http://app:5000"
