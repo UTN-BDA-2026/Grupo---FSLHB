@@ -76,6 +76,14 @@
         const url = new URL(window.location.href);
         return url.searchParams.get(name);
     }
+    function resolverSrcImagen(img) {
+      if (!img) return '';
+      if (img.startsWith('http://') || img.startsWith('https://') || img.startsWith('/')) {
+        return img;
+      }
+      return `/static/assets/img/${img}`;
+    }
+
     const noticiaIdx = getQueryParam('noticia');
     const main = document.querySelector('main');
     const destacada = document.getElementById('noticia-destacada');
@@ -85,11 +93,12 @@
         .then(r => r.json())
         .then(n => {
           if (!n.error) {
+            const imgSrc = resolverSrcImagen(n.imagen);
             destacada.innerHTML = `
               <article class="noticia-completa">
                 <h1 class="noticia-completa-titulo">${n.titulo}</h1>
                 <hr class="noticia-completa-separador">
-                ${n.imagen ? `<img src="/static/assets/img/${n.imagen}" alt="${n.titulo}" class="noticia-completa-img">` : ''}
+                ${imgSrc ? `<img src="${imgSrc}" alt="${n.titulo}" class="noticia-completa-img">` : ''}
                 <div class='noticia-completa-meta'><i class="fa-regular fa-calendar"></i> ${n.fecha ? n.fecha : 'Publicado por la Asociación'}</div>
                 <div class="noticia-completa-cuerpo">${n.contenido.replace(/(Viernes 20|Sábado 21|Domingo 22)/g, '<b>$1</b>').replace(/\n/g, '<br>')}</div>
                 <a href="/noticias" class="noticia-completa-volver">&larr; Volver a noticias</a>
@@ -103,14 +112,16 @@
       fetch('/api/noticias/')
         .then(r => r.json())
         .then(noticias => {
-          todas.innerHTML = noticias.map((n, idx) => `
+          todas.innerHTML = noticias.map((n, idx) => {
+            const imgSrc = resolverSrcImagen(n.imagen);
+            return `
             <article style="background:#fff;border-radius:10px;box-shadow:0 1px 6px rgba(0,100,0,0.08);padding:1.2rem 1.5rem;margin-bottom:1.5rem;max-width:600px;margin-left:auto;margin-right:auto;">
               <h3>${n.titulo}</h3>
-              ${n.imagen ? `<img src="/static/assets/img/${n.imagen}" alt="${n.titulo}" style="max-width:100%;border-radius:8px;margin-bottom:0.7rem;">` : ''}
+              ${imgSrc ? `<img src="${imgSrc}" alt="${n.titulo}" style="max-width:100%;border-radius:8px;margin-bottom:0.7rem;">` : ''}
               <p>${n.resumen}</p>
               <a href="/noticias?noticia=${n.id}" style="color:#006400;font-weight:bold;">Ver más</a>
             </article>
-          `).join('');
+          `}).join('');
         });
     }
     </script>

@@ -169,6 +169,14 @@ def create_app(config_name: str | None = None) -> Flask:
                 resp.headers.setdefault('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
         except Exception:
             pass
+
+        # Cache agresivo solo para archivos estáticos
+        try:
+            if request.path.startswith('/static/'):
+                # 30 días
+                resp.headers.setdefault('Cache-Control', 'public, max-age=2592000, immutable')
+        except Exception:
+            pass
         try:
             if 'csrf' in app.extensions:
                 token = generate_csrf()

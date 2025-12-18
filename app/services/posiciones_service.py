@@ -46,6 +46,7 @@ def obtener_tabla_posiciones(torneo, division, fecha, bloque):
         'club_id': None,
         'equipo': None,  # nombre del equipo
         'club': None,    # nombre del club
+        'categoria': division or '',
         'pj': 0, 'pg': 0, 'pe': 0, 'pp': 0,
         'gf': 0, 'gc': 0, 'dif': 0,
         'bonus': 0,
@@ -91,6 +92,7 @@ def obtener_tabla_posiciones(torneo, division, fecha, bloque):
         tloc['club_id'] = eq_local.club_id
         tloc['equipo'] = eq_local.nombre
         tloc['club'] = eq_local.club.nombre if eq_local.club else f"Club {eq_local.club_id}"
+        tloc['categoria'] = eq_local.categoria or division or ''
         tloc['pj'] += 1
         tloc['gf'] += loc
         tloc['gc'] += vis
@@ -100,6 +102,7 @@ def obtener_tabla_posiciones(torneo, division, fecha, bloque):
         tvis['club_id'] = eq_vis.club_id
         tvis['equipo'] = eq_vis.nombre
         tvis['club'] = eq_vis.club.nombre if eq_vis.club else f"Club {eq_vis.club_id}"
+        tvis['categoria'] = eq_vis.categoria or division or ''
         tvis['pj'] += 1
         tvis['gf'] += vis
         tvis['gc'] += loc
@@ -129,6 +132,7 @@ def obtener_tabla_posiciones(torneo, division, fecha, bloque):
                 'club_id': eq.club_id,
                 'equipo': eq.nombre,
                 'club': eq.club.nombre if eq.club else f"Club {eq.club_id}",
+                'categoria': eq.categoria or division or '',
                 'pj': 0, 'pg': 0, 'pe': 0, 'pp': 0,
                 'gf': 0, 'gc': 0, 'dif': 0,
                 'bonus': 0, 'pts': 0,
@@ -145,6 +149,7 @@ def obtener_tabla_posiciones(torneo, division, fecha, bloque):
                 'club_id': fake_id,
                 'equipo': 'Cuam',
                 'club': 'Cuam',
+                'categoria': division or '',
                 'pj': 0, 'pg': 0, 'pe': 0, 'pp': 0,
                 'gf': 0, 'gc': 0, 'dif': 0,
                 'bonus': 0, 'pts': 0,
@@ -185,10 +190,12 @@ def obtener_tabla_posiciones(torneo, division, fecha, bloque):
                 break
         salida.append({
             'pos': i,
+            'equipo_id': r['equipo_id'],
             'logo': f"/static/assets/img/{logo_file}" if logo_file else None,
             'zona': r['zona'],
             'equipo': r['equipo'],
             'club': r.get('club'),
+            'categoria': r.get('categoria', division or ''),
             'pj': r['pj'], 'pg': r['pg'], 'pe': r['pe'], 'pp': r['pp'],
             'gf': r['gf'], 'ge': r['gc'], 'dif': r['dif'],
             'bonus': r['bonus'], 'pts': r['pts']

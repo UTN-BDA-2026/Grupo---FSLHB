@@ -269,6 +269,19 @@ main iframe {
     display: inline-block;
     padding-bottom: 0.5rem;
 }
+/* Título para el slider de clubes */
+.clubes-slider-card h2 {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #1976d2;
+    text-align: left;
+    margin: 0 0 1rem 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 2px solid #1976d2;
+    display: inline-block;
+    padding-bottom: 0.5rem;
+}
 .slider-container {
     display: flex;
     align-items: center;

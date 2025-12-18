@@ -6,6 +6,7 @@ fetch('/static/data/clubes.json')
     const container = document.querySelector('.clubes-slider-card');
     if (!container) return;
     container.innerHTML = `
+      <h2>EQUIPOS</h2>
       <div class="clubes-slider-list" style="display:flex;flex-direction:row;flex-wrap:nowrap;gap:2rem;justify-content:flex-start;align-items:center;overflow-x:auto;padding:1rem 0;">
         ${clubes.map(club => `
           <div class="club-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.5rem;min-width:120px;max-width:140px;background:#fff;border-radius:12px;box-shadow:0 1px 6px rgba(0,0,0,0.08);padding:0.5rem;">

@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnAgregarTorneo = document.getElementById('agregar-torneo');
   const btnEditarTorneo = document.getElementById('editar-torneo');
   const btnEliminarTorneo = document.getElementById('eliminar-torneo');
+  const btnGestionarPosiciones = document.getElementById('gestionar-posiciones');
 
   async function cargarArbitros() {
     if (!panelContent) return;
@@ -200,6 +201,153 @@ document.addEventListener('DOMContentLoaded', () => {
           alert('Error inesperado al cargar el fixture.');
         }
       });
+    });
+  }
+
+  // --- Gestión de posiciones / categorías de equipos ---
+  const CATEGORIAS_BASE = ['Damas A', 'Damas B', 'Damas C', 'Caballeros', 'Mamis'];
+
+  async function mostrarGestorPosiciones() {
+    if (!panelContent) return;
+    panelContent.innerHTML = '<p>Cargando torneos...</p>';
+    let torneos = [];
+    try {
+      const resp = await fetch('/admin/torneos');
+      if (resp.ok) {
+        torneos = await resp.json();
+      }
+    } catch (e) {
+      console.error('Error obteniendo torneos para gestor de posiciones', e);
+    }
+
+    const opcionesTorneo = torneos.map(t => `<option value="${t.nombre}">${t.nombre}</option>`).join('');
+    const opcionesCategoria = CATEGORIAS_BASE.map(c => `<option value="${c}">${c}</option>`).join('');
+
+    panelContent.innerHTML = `
+      <h3>Gestión de categorías de equipos por torneo</h3>
+      <form id="gp-form" class="panel-torneo-form" style="max-width:720px;">
+        <label>Torneo
+          <select name="torneo" id="gp-torneo" required>
+            <option value="">Selecciona un torneo</option>
+            ${opcionesTorneo}
+          </select>
+        </label>
+        <label>Categoría actual
+          <select name="division" id="gp-division" required>
+            <option value="">Selecciona una categoría</option>
+            ${opcionesCategoria}
+          </select>
+        </label>
+        <button type="submit" class="btn-primario">Ver posiciones</button>
+      </form>
+      <div id="gp-tabla" style="margin-top:1.5rem;"></div>
+    `;
+
+    const form = document.getElementById('gp-form');
+    const tablaDiv = document.getElementById('gp-tabla');
+
+    async function cargarTabla() {
+      const torneo = form['torneo'].value;
+      const division = form['division'].value;
+      if (!torneo || !division) {
+        tablaDiv.innerHTML = '<p style="color:#888;">Selecciona torneo y categoría.</p>';
+        return;
+      }
+      tablaDiv.innerHTML = '<p style="color:#888;">Cargando posiciones...</p>';
+      const params = new URLSearchParams({ torneo, division });
+      try {
+        const resp = await fetch(`/posiciones?${params.toString()}`);
+        const data = await resp.json();
+        if (!Array.isArray(data) || data.length === 0) {
+          tablaDiv.innerHTML = '<p style="color:#d32f2f;">No hay datos para la selección.</p>';
+          return;
+        }
+
+        // Construir conjunto de categorías disponibles (base + las que vengan de la API)
+        const categoriasSet = new Set(CATEGORIAS_BASE);
+        data.forEach(r => { if (r.categoria) categoriasSet.add(r.categoria); });
+        const opcionesSelect = Array.from(categoriasSet).map(c => `<option value="${c}">${c}</option>`).join('');
+
+        let html = `
+          <div class="tabla-posiciones-wrapper">
+            <table class="tabla-posiciones-pro" style="width:100%;">
+              <thead>
+                <tr>
+                  <th>Pos</th>
+                  <th>Equipo</th>
+                  <th>Categoría actual</th>
+                  <th>Nueva categoría</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody>`;
+        for (const row of data) {
+          const catActual = row.categoria || division;
+          html += `
+            <tr>
+              <td>${row.pos}</td>
+              <td>${row.equipo}</td>
+              <td>${catActual}</td>
+              <td>
+                <select class="gp-categoria-select" data-equipo-id="${row.equipo_id}">
+                  ${opcionesSelect.replace(`value="${catActual}"`, `value="${catActual}" selected`)}
+                </select>
+              </td>
+              <td>
+                <button type="button" class="gp-guardar-categoria" data-equipo-id="${row.equipo_id}">Guardar</button>
+              </td>
+            </tr>`;
+        }
+        html += '</tbody></table></div>';
+        tablaDiv.innerHTML = html;
+      } catch (e) {
+        console.error('Error cargando posiciones para gestor', e);
+        tablaDiv.innerHTML = '<p style="color:red;">Error al cargar posiciones.</p>';
+      }
+    }
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      cargarTabla();
+    });
+
+    tablaDiv.addEventListener('click', async function(e) {
+      const btn = e.target.closest('.gp-guardar-categoria');
+      if (!btn) return;
+      const equipoId = btn.getAttribute('data-equipo-id');
+      const select = tablaDiv.querySelector(`.gp-categoria-select[data-equipo-id="${equipoId}"]`);
+      if (!select) return;
+      const nuevaCat = select.value;
+      if (!nuevaCat) {
+        alert('Selecciona una categoría.');
+        return;
+      }
+      if (!confirm('¿Confirmar cambio de categoría para este equipo?')) return;
+      try {
+        const resp = await fetch(`/admin/equipos/${equipoId}/categoria`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ categoria: nuevaCat })
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || data.error) {
+          alert('No se pudo actualizar la categoría: ' + (data.error || resp.status));
+          return;
+        }
+        alert('Categoría actualizada correctamente.');
+        // Recargar tabla para reflejar cambios (el equipo puede desaparecer de la categoría actual)
+        cargarTabla();
+      } catch (err) {
+        console.error('Error actualizando categoría de equipo', err);
+        alert('Error inesperado al actualizar la categoría.');
+      }
+    });
+  }
+
+  if (btnGestionarPosiciones) {
+    btnGestionarPosiciones.addEventListener('click', e => {
+      e.preventDefault();
+      mostrarGestorPosiciones();
     });
   }
 

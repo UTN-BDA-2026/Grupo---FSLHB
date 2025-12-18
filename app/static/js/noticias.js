@@ -3,15 +3,26 @@
 let noticiasData = [];
 let pageIndex = 0; // índice de página (no de tarjeta)
 
+function resolverSrcImagen(img) {
+  if (!img) return '';
+  // Si ya es URL absoluta o ruta que empieza con '/', usar tal cual
+  if (img.startsWith('http://') || img.startsWith('https://') || img.startsWith('/')) {
+    return img;
+  }
+  // En otro caso asumimos que es solo el nombre de archivo dentro de assets/img
+  return `/static/assets/img/${img}`;
+}
+
 function renderNoticiasSlider() {
   const contenedor = document.getElementById('noticias-destacadas');
   if (!contenedor) return;
   contenedor.innerHTML = noticiasData.map((noticia) => {
   const noticiaHref = `/noticias?noticia=${noticia.id}`;
+  const imgSrc = resolverSrcImagen(noticia.imagen);
     return `
       <a class="noticia-slider" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-decoration:none;color:inherit;cursor:pointer;" href="${noticiaHref}">
         <div style="width:100%;display:flex;justify-content:center;align-items:center;">
-          <img src="/static/assets/img/${noticia.imagen}" alt="${noticia.titulo}" style="width:100%;max-width:220px;height:140px;object-fit:cover;border-radius:10px 10px 0 0;margin-bottom:0.7rem;box-shadow:0 2px 8px rgba(25,118,210,0.10);display:block;">
+          ${imgSrc ? `<img src="${imgSrc}" alt="${noticia.titulo}" style="width:100%;max-width:220px;height:140px;object-fit:cover;border-radius:10px 10px 0 0;margin-bottom:0.7rem;box-shadow:0 2px 8px rgba(25,118,210,0.10);display:block;">` : ''}
         </div>
         <h3 style="font-size:1.15rem;margin:0 0 0.5rem 0;color:#1976d2;">${noticia.titulo}</h3>
         <p style="font-size:1rem;margin:0 0 0.7rem 0;color:#333;">${noticia.resumen}</p>

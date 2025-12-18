@@ -1,6 +1,7 @@
 
 from flask import Blueprint, render_template, request
 from flask_login import login_required, current_user
+from app import require_admin
 
 static_bp = Blueprint('static_pages', __name__)
 
@@ -150,6 +151,12 @@ def admin_panel():
     if not getattr(current_user, 'is_admin', False):
         return render_template('403.html'), 403
     return render_template('admin-panel.html')
+
+
+@static_bp.route('/admin/noticias')
+@require_admin
+def admin_noticias():
+    return render_template('admin-noticias.html')
 
 @static_bp.route('/noticias')
 def noticias():

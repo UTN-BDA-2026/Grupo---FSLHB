@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from app.models.equipo import Equipo
 from app.repositories.equipo_repositorio import EquipoRepository
 from app.mappings.equipo_mapping import EquipoSchema
+from app import require_admin, csrf
 
 equipo_bp = Blueprint('equipo', __name__)
 equipo_schema = EquipoSchema()
@@ -48,3 +49,19 @@ def borrar_equipo(id):
     if not equipo:
         return jsonify({'error': 'No encontrado'}), 404
     return jsonify({'resultado': 'Eliminado'})
+
+
+@equipo_bp.route('/admin/equipos/<int:id>/categoria', methods=['PUT'])
+@csrf.exempt
+@require_admin
+def actualizar_categoria_equipo_admin(id: int):
+    data = request.get_json() or {}
+    nueva_cat = (data.get('categoria') or '').strip()
+    if not nueva_cat:
+        return jsonify({'error': 'La categoría es obligatoria'}), 400
+    equipo = EquipoRepository.buscar_por_id(id)
+    if not equipo:
+        return jsonify({'error': 'No encontrado'}), 404
+    equipo.categoria = nueva_cat
+    EquipoRepository.actualizar_equipo(equipo)
+    return jsonify({'id': equipo.id, 'categoria': equipo.categoria}), 200
