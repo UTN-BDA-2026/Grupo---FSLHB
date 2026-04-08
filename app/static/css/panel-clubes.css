@@ -397,6 +397,16 @@ html {
     overflow: visible;
     max-width: none;
 }
+/* Listado del Cuerpo Técnico: en móvil permitir deslizar horizontal y evitar solapado */
+@media (max-width: 600px) {
+    #tabla-ct {
+        min-width: 600px; /* más ancho que la pantalla, obliga al scroll horizontal */
+    }
+    #tabla-ct th,
+    #tabla-ct td {
+        white-space: nowrap; /* cada dato en una sola línea */
+    }
+}
 /* Centrar las tarjetas de tablas secundarias en pantallas móviles */
 @media (max-width: 768px) {
     .tablas-secundarias-panel {

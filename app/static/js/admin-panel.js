@@ -25,6 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnEditarTorneo = document.getElementById('editar-torneo');
   const btnEliminarTorneo = document.getElementById('eliminar-torneo');
   const btnGestionarPosiciones = document.getElementById('gestionar-posiciones');
+  const btnVerMesas = document.getElementById('ver-mesas');
+  const btnAgregarMesa = document.getElementById('agregar-mesa');
+  const btnEliminarMesa = document.getElementById('eliminar-mesa');
+  const btnEditarMesa = document.getElementById('editar-mesa');
 
   async function cargarArbitros() {
     if (!panelContent) return;
@@ -348,6 +352,235 @@ document.addEventListener('DOMContentLoaded', () => {
     btnGestionarPosiciones.addEventListener('click', e => {
       e.preventDefault();
       mostrarGestorPosiciones();
+    });
+  }
+
+  // --- Mesas de control (usuarios operadores) ---
+  async function cargarMesasControl() {
+    if (!panelContent) return;
+    panelContent.innerHTML = '<p>Cargando mesas de control...</p>';
+    try {
+      const resp = await fetch('/admin/mesas-control');
+      if (!resp.ok) {
+        panelContent.innerHTML = `<p>Error al obtener mesas de control (código ${resp.status}).</p>`;
+        return;
+      }
+      const lista = await resp.json();
+      if (!Array.isArray(lista) || lista.length === 0) {
+        panelContent.innerHTML = '<p>No hay mesas de control cargadas.</p>';
+        return;
+      }
+
+      const filas = lista.map(u => {
+        const clubNombre = (u.club && u.club.nombre) ? u.club.nombre : '';
+        const permisos = [];
+        if (u.is_operador) permisos.push('Operador');
+        if (u.puede_cargar_incidencias) permisos.push('Incidencias');
+        if (u.puede_precargar_equipos) permisos.push('Precarga equipos');
+        return `
+          <tr>
+            <td>${u.id}</td>
+            <td>${u.username}</td>
+            <td>${clubNombre}</td>
+            <td>${permisos.join(', ')}</td>
+          </tr>
+        `;
+      }).join('');
+
+      panelContent.innerHTML = `
+        <h3>Mesas de control (usuarios operadores)</h3>
+        <div class="tabla-posiciones-card">
+          <table class="tabla-posiciones">
+            <thead>
+              <tr><th>ID</th><th>Usuario</th><th>Club</th><th>Permisos</th></tr>
+            </thead>
+            <tbody>${filas}</tbody>
+          </table>
+        </div>
+      `;
+    } catch (err) {
+      console.error('Error al cargar mesas de control', err);
+      panelContent.innerHTML = '<p>Error inesperado al cargar mesas de control.</p>';
+    }
+  }
+
+  if (btnVerMesas) {
+    btnVerMesas.addEventListener('click', e => {
+      e.preventDefault();
+      cargarMesasControl();
+    });
+  }
+
+  // Formulario para crear una nueva mesa de control
+  function mostrarFormularioCrearMesa() {
+    if (!panelContent) return;
+    panelContent.innerHTML = `
+      <h3>Agregar mesa de control</h3>
+      <form id="form-crear-mesa" class="jugadora-form" style="max-width:460px;">
+        <label>Usuario
+          <input type="text" name="username" required />
+        </label>
+        <label>Contraseña
+          <input type="password" name="password" required />
+        </label>
+        <label>Club (opcional)
+          <input type="text" name="club_nombre" placeholder="Nombre exacto del club" />
+        </label>
+        <label style="display:flex;align-items:center;gap:0.4rem;">
+          <input type="checkbox" name="is_operador" checked /> Operador general
+        </label>
+        <label style="display:flex;align-items:center;gap:0.4rem;">
+          <input type="checkbox" name="puede_cargar_incidencias" checked /> Puede cargar incidencias
+        </label>
+        <label style="display:flex;align-items:center;gap:0.4rem;">
+          <input type="checkbox" name="puede_precargar_equipos" checked /> Puede precargar equipos
+        </label>
+        <button type="submit">Crear mesa de control</button>
+      </form>
+    `;
+
+    const form = document.getElementById('form-crear-mesa');
+    form.addEventListener('submit', async ev => {
+      ev.preventDefault();
+      const fd = new FormData(form);
+      const payload = {
+        username: fd.get('username'),
+        password: fd.get('password'),
+        club_nombre: fd.get('club_nombre'),
+        is_operador: fd.get('is_operador') === 'on',
+        puede_cargar_incidencias: fd.get('puede_cargar_incidencias') === 'on',
+        puede_precargar_equipos: fd.get('puede_precargar_equipos') === 'on',
+      };
+      try {
+        const resp = await fetch('/admin/mesas-control', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || data.error) {
+          alert('No se pudo crear la mesa de control: ' + (data.error || resp.status));
+          return;
+        }
+        alert('Mesa de control creada correctamente.');
+        cargarMesasControl();
+      } catch (err) {
+        console.error('Error creando mesa de control', err);
+        alert('Error inesperado al crear la mesa de control.');
+      }
+    });
+  }
+
+  // Formulario para eliminar una mesa de control existente
+  function mostrarFormularioEliminarMesa() {
+    if (!panelContent) return;
+    panelContent.innerHTML = `
+      <h3>Eliminar mesa de control</h3>
+      <p style="font-size:0.9rem;color:#555;">Ingresa el ID del usuario operador a eliminar. Puedes ver los IDs en la tabla de "Ver Mesas".</p>
+      <form id="form-eliminar-mesa" class="jugadora-form" style="max-width:360px;">
+        <label>ID de usuario
+          <input type="number" name="usuario_id" required min="1" />
+        </label>
+        <button type="submit" style="background:#b71c1c;">Eliminar mesa de control</button>
+      </form>
+    `;
+
+    const form = document.getElementById('form-eliminar-mesa');
+    form.addEventListener('submit', async ev => {
+      ev.preventDefault();
+      const fd = new FormData(form);
+      const id = fd.get('usuario_id');
+      if (!id) return;
+      if (!confirm('¿Seguro que deseas eliminar esta mesa de control?')) return;
+      try {
+        const resp = await fetch(`/admin/mesas-control/${id}`, { method: 'DELETE' });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || data.error) {
+          alert('No se pudo eliminar la mesa de control: ' + (data.error || resp.status));
+          return;
+        }
+        alert('Mesa de control eliminada.');
+        cargarMesasControl();
+      } catch (err) {
+        console.error('Error eliminando mesa de control', err);
+        alert('Error inesperado al eliminar la mesa de control.');
+      }
+    });
+  }
+
+  if (btnAgregarMesa) {
+    btnAgregarMesa.addEventListener('click', e => {
+      e.preventDefault();
+      mostrarFormularioCrearMesa();
+    });
+  }
+
+  if (btnEliminarMesa) {
+    btnEliminarMesa.addEventListener('click', e => {
+      e.preventDefault();
+      mostrarFormularioEliminarMesa();
+    });
+  }
+
+  // Formulario para editar una mesa de control existente
+  function mostrarFormularioEditarMesa() {
+    if (!panelContent) return;
+    panelContent.innerHTML = `
+      <h3>Editar mesa de control</h3>
+      <p style="font-size:0.9rem;color:#555;">Ingresa el ID del usuario operador y los campos que quieras modificar.</p>
+      <form id="form-editar-mesa" class="jugadora-form" style="max-width:420px;">
+        <label>ID de usuario
+          <input type="number" name="usuario_id" required min="1" />
+        </label>
+        <label>Nuevo usuario (opcional)
+          <input type="text" name="username" />
+        </label>
+        <label>Nueva contraseña (opcional)
+          <input type="password" name="password" />
+        </label>
+        <button type="submit">Guardar cambios</button>
+      </form>
+    `;
+
+    const form = document.getElementById('form-editar-mesa');
+    form.addEventListener('submit', async ev => {
+      ev.preventDefault();
+      const fd = new FormData(form);
+      const id = fd.get('usuario_id');
+      const username = (fd.get('username') || '').trim();
+      const password = fd.get('password') || '';
+      if (!id) return;
+      if (!username && !password) {
+        alert('No hay cambios para guardar. Completa usuario y/o contraseña.');
+        return;
+      }
+      const payload = {};
+      if (username) payload.username = username;
+      if (password) payload.password = password;
+      try {
+        const resp = await fetch(`/admin/mesas-control/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || data.error) {
+          alert('No se pudo editar la mesa de control: ' + (data.error || resp.status));
+          return;
+        }
+        alert('Mesa de control actualizada correctamente.');
+        cargarMesasControl();
+      } catch (err) {
+        console.error('Error editando mesa de control', err);
+        alert('Error inesperado al editar la mesa de control.');
+      }
+    });
+  }
+
+  if (btnEditarMesa) {
+    btnEditarMesa.addEventListener('click', e => {
+      e.preventDefault();
+      mostrarFormularioEditarMesa();
     });
   }
 

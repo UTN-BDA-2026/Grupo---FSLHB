@@ -2,7 +2,6 @@
 from flask import Blueprint, request, jsonify
 from app.models import Club
 from app.services.club_service import ClubService
-from app.services.arbitro_service import ArbitroService
 from app.mappings.club_mapping import ClubMapping
 from app import require_admin
 
@@ -53,28 +52,3 @@ def obtener_arbitro_club(id):
     if not arb:
         return jsonify({}), 200
     return jsonify({'id': arb.id, 'nombre': arb.nombre, 'apellido': arb.apellido, 'dni': arb.dni})
-
-@clubs_bp.route('/clubs/<int:id>/arbitro', methods=['PUT'])
-def asignar_arbitro_club(id):
-    data = request.get_json() or {}
-    # Permite dos modos:
-    # 1) Asignar existente: { arbitro_id }
-    # 2) Crear y asignar: { nombre, apellido, dni }
-    arb_id = data.get('arbitro_id')
-    if not arb_id:
-        # Crear uno nuevo
-        try:
-            nuevo = ArbitroService.crear({
-                'nombre': data.get('nombre', ''),
-                'apellido': data.get('apellido', ''),
-                'dni': data.get('dni', ''),
-            })
-            arb_id = nuevo.id
-        except ValueError as e:
-            return jsonify({'error': str(e)}), 400
-        except Exception as e:
-            return jsonify({'error': 'No se pudo crear el árbitro', 'detail': str(e)}), 500
-    club = ClubService.asignar_arbitro(id, int(arb_id))
-    if not club:
-        return jsonify({'error': 'Club no encontrado'}), 404
-    return jsonify({'ok': True, 'arbitro_id': club.arbitro_id})

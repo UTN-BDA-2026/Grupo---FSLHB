@@ -33,6 +33,9 @@
 .panel-menu-group-jugadores {
     width: 100%;
 }
+.panel-menu-group-mesas {
+    width: 100%;
+}
 .panel-menu a {
     background: #006400;
     color: #fff;
