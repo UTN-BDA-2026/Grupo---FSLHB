@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jugadores</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel-clubes.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/crear-lista-buena-fe.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body class="panel-bg">
+    <!-- NAV INSTITUCIONAL -->
+    <nav class="panel-nav-ref">
+    <img src="{{ url_for('static', filename='assets/img/logo-asociacion.png') }}" alt="Logo Asociación de Hockey sobre Césped" class="panel-header-logo-ref panel-nav-logo-izq">
+    <a href="/panel-clubes" class="inicio-link panel-nav-logo-der" title="Inicio"><i class="fas fa-home" aria-hidden="true"></i></a>
+        <div class="panel-nav-dropdown-container">
+            <a href="#" class="panel-nav-link panel-nav-dropdown-toggle" id="admin-plantel-link">
+                <span class="label-long">Administración Plantel</span>
+                <span class="label-short">Adm. Plantel</span>
+                <i class="fas fa-caret-down"></i>
+            </a>
+            <ul class="panel-nav-dropdown" id="admin-plantel-dropdown">
+                <li><a href="/precarga-equipos" class="panel-nav-dropdown-item">Precarga de Equipos</a></li>
+                {% if current_user.is_authenticated %}
+                <li><a href="/carga-incidencias" class="panel-nav-dropdown-item">Carga de incidencias</a></li>
+                {% endif %}
+                <li><a href="/control-partido" class="panel-nav-dropdown-item">Control Partido</a></li>
+                <li><a href="/crear-lista-buena-fe" class="panel-nav-dropdown-item">Crear Lista de Buena Fe</a></li>
+                <li><a href="/jugadores" class="panel-nav-dropdown-item">Jugadores</a></li>
+                <li><a href="#" class="panel-nav-dropdown-item">Tribunal de Penas</a></li>
+            </ul>
+        </div>
+        {% if current_user.is_authenticated and not current_user.is_operador %}
+        <div class="panel-nav-dropdown-container">
+            <a href="#" class="panel-nav-link panel-nav-dropdown-toggle" id="param-club-link">
+                <span class="label-long">Parámetros del Club</span>
+                <span class="label-short">Parám. Club</span>
+                <i class="fas fa-caret-down"></i>
+            </a>
+            <ul class="panel-nav-dropdown" id="param-club-dropdown">
+                <li><a href="/equipos-categorias" class="panel-nav-dropdown-item">Equipos y Categorías</a></li>
+                <li><a href="datos-club" class="panel-nav-dropdown-item">Datos del Club</a></li>
+                <li><a href="/cuerpo-tecnico" class="panel-nav-dropdown-item">Cuerpo Técnico</a></li>
+                <li><a href="#" class="panel-nav-dropdown-item">Cuerpo Técnico</a></li>
+                <li><a href="#" class="panel-nav-dropdown-item">Tabla de Usuarios</a></li>
+            </ul>
+        </div>
+        {% endif %}
+        <span class="panel-nav-club" id="nombre-club-nav"></span>
+    <a href="/login" class="salir-link" title="Salir"><i class="fas fa-sign-out-alt" aria-hidden="true"></i></a>
+    </nav>
+    <main class="panel-main">
+        <h1 class="panel-titulo">Jugadores</h1>
+    <!-- Filtro de categoría -->
+        <div style="margin:0 0 0.75rem 0; display:flex; gap:12px; align-items:center;">
+            <label for="filtro-categoria"><b>Categoría:</b></label>
+            <select id="filtro-categoria">
+                <option value="">(Todas)</option>
+                <option value="DAMAS A">DAMAS A</option>
+                <option value="DAMAS B">DAMAS B</option>
+                <option value="DAMAS C">DAMAS C</option>
+                <option value="CABALLEROS">CABALLEROS</option>
+                <option value="MAMIS">MAMIS</option>
+            </select>
+        </div>
+        <div style="margin:0 0 1.25rem 0; display:flex; gap:12px; align-items:center;">
+            <label for="filtro-nombre"><b>Buscar:</b></label>
+            <input type="text" id="filtro-nombre" placeholder="Apellido o Nombre" style="padding:6px 8px; min-width:260px;">
+        </div>
+        <!-- Formulario de agregar jugadora movido a crear-lista-buena-fe.html -->
+        <section class="panel-tabla-card">
+            <h2>Lista de Jugadores</h2>
+            <div class="tabla-sec-scroll">
+                <table id="tabla-jugadores" class="tabla-sec-panel">
+                    <thead>
+                        <tr>
+                            <th>DNI</th>
+                            <th>Apellido</th>
+                            <th>Nombre</th>
+                            <th>Fecha de Nacimiento</th>
+                            <th>Categoría</th>
+                            {% if current_user.is_authenticated and current_user.club_id %}
+                            <th>Acciones</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Los datos de los jugadores se cargarán dinámicamente -->
+                        <!-- Ejemplo de fila con botón borrar:
+                        <tr>
+                            <td>53423425</td>
+                            <td>Peñalbe</td>
+                            <td>Hernan</td>
+                            <td>23-10-2003</td>
+                            <td>5</td>
+                            <td>A</td>
+                            <td><button class="btn-borrar-jugador" onclick="borrarJugador(this)"><i class='fas fa-trash'></i> Borrar</button></td>
+                        </tr>
+                        -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    <script src="{{ url_for('static', filename='js/panel-nav.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/csrf.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jugadores.js') }}"></script>
+</body>
+</html>

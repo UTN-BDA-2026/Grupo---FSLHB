@@ -1,0 +1,675 @@
+/* Responsive: apilar y centrar botón en móvil para Cuerpo Técnico */
+@media (max-width: 600px) {
+    .panel-torneo-form-row {
+        flex-direction: column !important;
+        gap: 10px;
+        align-items: stretch !important;
+    }
+    .panel-torneo-form-group {
+        width: 100%;
+        min-width: 0;
+    }
+        .panel-btn[type="submit"] {
+            width: 100%;
+            min-width: 0;
+            margin: 12px auto 0 auto;
+            display: block;
+    }
+}
+/* Centrar checkbox en la columna Seleccionar */
+.tabla-sec-panel td:last-child, .tabla-sec-panel th:last-child {
+    text-align: center;
+    vertical-align: middle;
+}
+.tabla-sec-panel input[type="checkbox"] {
+    display: inline-block;
+    margin: 0 auto;
+}
+body.panel-bg {
+    min-height: 100vh;
+    background: #f4f8fb;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    width: 100vw;
+    overflow-x: hidden;
+}
+
+html {
+    height: 100%;
+    box-sizing: border-box;
+    background: #f4f8fb;
+    scroll-behavior: smooth;
+}
+/* HEADER Y NAV IGUAL A REFERENCIA */
+.panel-header-ref {
+    width: 100%;
+    background: linear-gradient(90deg, #1976d2 0%, #43a047 100%);
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 2.2rem 0.5rem 1.2rem;
+    min-height: 70px;
+    box-sizing: border-box;
+}
+.panel-header-logo-ref {
+    width: 54px;
+    height: 54px;
+    border-radius: 10px;
+    background: #fff;
+    object-fit: contain;
+    margin-right: 1.1rem;
+}
+.panel-header-title-ref {
+    font-size: 2.1rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -1px;
+    font-family: 'Segoe UI', 'Arial', sans-serif;
+}
+.panel-nav-ref {
+    width: 100%;
+    background: #1976d2;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.2rem 1.4rem 0.2rem 1.2rem; /* reduce padding-right to bring last icon closer */
+    min-height: 54px;
+    box-sizing: border-box;
+    border-bottom: 2.5px solid #1976d2;
+}
+.panel-nav-ref a {
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 1.18rem;
+    padding: 0.38rem 1.2rem 0.38rem 0.9rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    transition: background 0.18s, color 0.18s;
+    font-family: 'Segoe UI', 'Arial', sans-serif;
+}
+/* Alternar etiquetas largas/cortas según ancho */
+.panel-nav-ref .label-short { display: none; }
+.panel-nav-ref .label-long { display: inline; }
+/* Por defecto ocultar texto de 'Salir'; se muestra en desktop por media query */
+.panel-nav-ref .salir-link .salir-text { display: none; }
+.panel-nav-ref a.active, .panel-nav-ref a:hover {
+    background: rgba(255,255,255,0.13);
+    color: #fff;
+}
+.panel-nav-ref i {
+    font-size: 1.25em;
+    margin-right: 0.3em;
+    color: #fff;
+    min-width: 1.2em;
+    text-align: center;
+}
+.panel-nav-ref .salir-link {
+    margin-left: 0.8rem; /* less separation from previous item */
+    color: #fff;
+    font-weight: 800;
+    font-size: 1.18rem;
+    background: none;
+    border: none;
+    padding-right: 0.1rem; /* tiny padding so it isn't flush */
+    padding-left: 0.35rem;
+    display: flex;
+    align-items: center;
+}
+.panel-nav-ref .salir-link:hover {
+    background: rgba(255,255,255,0.13);
+    color: #fff;
+}
+.panel-header {
+    background: linear-gradient(90deg, #1976d2 0%, #43a047 100%);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    padding: 1.2rem 2rem 1.2rem 1.2rem;
+    box-shadow: 0 2px 12px rgba(25,118,210,0.10);
+}
+.panel-header img {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    margin-right: 1.2rem;
+    background: #fff;
+    object-fit: contain;
+}
+.panel-header-title {
+    font-size: 1.45rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+.panel-main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1.2rem 2.5rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2.5rem 2rem;
+    min-height: calc(100vh - 124px); /* header + nav aprox */
+}
+.panel-main {
+    margin-top: 0;
+}
+.panel-titulo {
+    font-size: 2.1rem;
+    color: #1976d2;
+    font-weight: 900;
+    margin: 2.2rem 0 1.2rem 0;
+    text-align: center;
+}
+.panel-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px 0 rgba(25,118,210,0.10);
+    padding: 2rem 1.5rem 1.5rem 1.5rem;
+    min-width: 270px;
+    max-width: 340px;
+    flex: 1 1 320px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    position: relative;
+}
+.panel-card h3 {
+    font-size: 1.18rem;
+    color: #1976d2;
+    font-weight: 800;
+    margin: 0 0 0.7rem 0;
+}
+.panel-card .panel-card-icon {
+    font-size: 2.2rem;
+    color: #43a047;
+    margin-bottom: 0.7rem;
+}
+.panel-card p {
+    color: #333;
+    font-size: 1.05rem;
+    margin-bottom: 1.2rem;
+}
+.panel-card .panel-btn {
+    background: linear-gradient(90deg, #1976d2 60%, #43a047 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.6rem 1.3rem;
+    font-size: 1.08rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(25,118,210,0.10);
+    transition: background 0.18s, box-shadow 0.18s;
+}
+.panel-card .panel-btn:hover {
+    background: #43a047;
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(25,118,210,0.18);
+}
+/* Tarjeta de selección de torneo */
+.panel-torneo-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px 0 rgba(25,118,210,0.10);
+    padding: 1.5rem 2rem;
+    margin-bottom: 2.2rem;
+    width: 100%;
+    max-width: 700px;
+}
+
+.panel-torneo-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem 2.5rem;
+    font-size: 1.08rem;
+    color: #333;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.panel-torneo-form-group {
+    flex: 1 1 120px;
+    min-width: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.panel-torneo-form-group label {
+    font-weight: bold;
+    margin-bottom: 0.2rem;
+}
+
+.panel-torneo-form-group select {
+    width: 100%;
+    padding: 0.4rem 0.7rem;
+    border-radius: 8px;
+    border: 1.5px solid #b0bec5;
+    font-size: 1.08rem;
+}
+
+/* Custom dropdown para "Partido" (siempre abre hacia abajo) */
+.custom-dd {
+    position: relative;
+}
+.custom-dd-btn {
+    width: 100%;
+    padding: 0.4rem 0.7rem;
+    border-radius: 8px;
+    border: 1.5px solid #b0bec5;
+    font-size: 1.08rem;
+    background: #fff;
+    cursor: pointer;
+    text-align: left;
+}
+.custom-dd-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #b0bec5;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(25,118,210,0.13);
+    max-height: 260px;
+    overflow-y: auto;
+    z-index: 1200;
+    display: none;
+}
+.custom-dd.open .custom-dd-menu {
+    display: block;
+}
+.custom-dd-item {
+    padding: 0.5rem 0.7rem;
+    cursor: pointer;
+}
+.custom-dd-item:hover {
+    background: #e3f2fd;
+}
+
+.panel-btn {
+    background: linear-gradient(90deg, #1976d2 60%, #43a047 100%);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.6rem 1.3rem;
+    font-size: 1.08rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(25,118,210,0.10);
+    transition: background 0.18s, box-shadow 0.18s;
+    margin-top: 1.2rem;
+}
+
+.panel-btn:hover {
+    background: #43a047;
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(25,118,210,0.18);
+}
+/* Tarjeta de tabla de posiciones */
+.panel-tabla-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px 0 rgba(25,118,210,0.10);
+    padding: 1.5rem 1.2rem 2rem 1.2rem;
+    margin-bottom: 2.2rem;
+    width: 100%;
+    max-width: 900px;
+}
+
+.panel-posiciones-form {
+    display: flex;
+    gap: 1.5rem 2.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 1.2rem;
+}
+
+.panel-posiciones-form label {
+    font-weight: bold;
+    margin-right: 0.3rem;
+}
+
+.panel-posiciones-form select {
+    padding: 0.4rem 0.7rem;
+    border-radius: 8px;
+    border: 1.5px solid #b0bec5;
+    font-size: 1.08rem;
+}
+/* Nuevos estilos para las tablas secundarias */
+.tablas-secundarias-panel {
+    display: flex;
+    flex-direction: row;
+    gap: 2.5rem;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto 2.5rem auto;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+.tablas-secundarias-panel section {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px 0 rgba(25,118,210,0.10);
+    padding: 1.1rem 0.7rem 1.3rem 0.7rem;
+    width: 100%;
+    min-width: 220px;
+    max-width: 290px;
+    flex: 1 1 240px;
+    margin: 0;
+}
+.tablas-secundarias-panel h3 {
+    font-size: 1.18rem;
+    color: #1976d2;
+    font-weight: 800;
+    margin: 0 0 1.2rem 0;
+    line-height: normal;
+    text-align: initial;
+    word-break: normal;
+}
+.tabla-sec-titulo {
+    color: #444;
+    font-size: 1.18rem;
+    font-weight: 800;
+    margin: 0 0 1.2rem 0;
+    line-height: normal;
+    text-align: initial;
+    word-break: normal;
+}
+.tabla-sec-scroll {
+    overflow-x: auto;
+}
+.tabla-sec-panel th.club, .tabla-sec-panel td.club,
+.tabla-sec-panel th.jugador, .tabla-sec-panel td.jugador {
+    max-width: none;
+    width: auto;
+    word-break: normal;
+}
+.tabla-sec-panel th, .tabla-sec-panel td {
+    font-size: 0.97rem;
+    padding: 0.45rem 0.2rem;
+    white-space: normal;
+    text-overflow: initial;
+    overflow: visible;
+    max-width: none;
+}
+/* Listado del Cuerpo Técnico: en móvil permitir deslizar horizontal y evitar solapado */
+@media (max-width: 600px) {
+    #tabla-ct {
+        min-width: 600px; /* más ancho que la pantalla, obliga al scroll horizontal */
+    }
+    #tabla-ct th,
+    #tabla-ct td {
+        white-space: nowrap; /* cada dato en una sola línea */
+    }
+}
+/* Centrar las tarjetas de tablas secundarias en pantallas móviles */
+@media (max-width: 768px) {
+    .tablas-secundarias-panel {
+        justify-content: center; /* centrar filas cuando envuelven */
+    }
+    .tablas-secundarias-panel section {
+        margin-left: auto;
+        margin-right: auto; /* centrar cada tarjeta */
+    }
+}
+.panel-nav-logo-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.38rem 1.2rem 0.38rem 0.9rem;
+}
+
+.panel-nav-logo-link .panel-header-logo-ref {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: #fff;
+    object-fit: contain;
+    margin: 0;
+    box-shadow: 0 1px 4px rgba(25,118,210,0.10);
+}
+
+.panel-nav-logo-link span {
+    font-weight: 700;
+    color: #fff;
+    font-size: 1.18rem;
+    font-family: 'Segoe UI', 'Arial', sans-serif;
+}
+
+.panel-nav-logo-izq {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: #fff;
+    object-fit: contain;
+    margin-right: 1.1rem;
+    margin-left: 0;
+    box-shadow: 0 1px 4px rgba(25,118,210,0.10);
+    display: block;
+}
+
+.panel-nav-ref {
+    /* Asegura que el logo quede alineado con los links */
+    align-items: center;
+}
+
+.panel-nav-ref a {
+    /* Ajusta el padding izquierdo para compensar el logo */
+    padding-left: 0.7rem;
+}
+/* Eliminar margen superior del main si no hay header */
+.panel-main {
+    margin-top: 0;
+}
+
+.panel-nav-link {
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 1.18rem;
+    padding: 0.38rem 1.2rem 0.38rem 0.9rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    transition: background 0.18s, color 0.18s;
+    font-family: 'Segoe UI', 'Arial', sans-serif;
+}
+
+.panel-nav-link:hover {
+    background: rgba(255,255,255,0.13);
+    color: #fff;
+}
+
+.panel-nav-club {
+    color: #fff;
+    font-weight: 800;
+    font-size: 1.18rem;
+    margin-left: 1.5rem;
+    margin-right: auto;
+    font-family: 'Segoe UI', 'Arial', sans-serif;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+}
+
+/* --- Responsive header/nav (móvil) --- */
+@media (max-width: 768px) {
+    .panel-nav-ref {
+        padding: 0.30rem 0.35rem; /* tighter right padding on small screens */
+        gap: 0.25rem;
+        min-height: 46px;
+        flex-wrap: nowrap;           /* mantener todo en una sola línea */
+        justify-content: flex-start; /* que los elementos fluyan de izquierda a derecha */
+        overflow-x: auto;            /* permitir scroll horizontal si no entra todo */
+        -webkit-overflow-scrolling: touch; /* scroll suave en iOS */
+    }
+    .panel-nav-ref > * { flex: 0 0 auto; } /* evitar que los items se encojan/corten */
+    .panel-nav-logo-izq {
+        width: 30px;
+        height: 30px;
+        margin-right: 0.35rem;
+    }
+    .panel-nav-ref a,
+    .panel-nav-link,
+    .panel-nav-ref .salir-link,
+    .panel-nav-club {
+        font-size: clamp(0.85rem, 3.2vw, 0.95rem);
+        padding: 0.28rem 0.55rem;
+        white-space: nowrap;         /* evitar quiebres en etiquetas */
+    }
+    .panel-nav-dropdown-container { white-space: nowrap; }
+    .panel-nav-club { margin-left: auto; margin-right: 0.4rem; display: none !important; }
+    .panel-nav-ref i { font-size: 1em; margin-right: 0.2em; }
+    .panel-nav-dropdown-toggle i { margin-left: 0.2rem; }
+    /* Mostrar etiquetas cortas en móvil */
+    .panel-nav-ref .label-long { display: none; }
+    .panel-nav-ref .label-short { display: inline; }
+    /* Hacer que 'Salir' no se corte: mostrar solo el ícono en móvil */
+    .panel-nav-ref .salir-link { padding: 0.22rem 0.28rem; margin-left: 0.3rem; }
+    .panel-nav-ref .salir-link i { margin-right: 0; font-size: 1.05rem; }
+}
+
+/* En desktop (>= 769px) mostrar el texto 'Salir' junto al ícono */
+@media (min-width: 769px) {
+    .panel-nav-ref .salir-link .salir-text { display: inline; }
+}
+
+/* Extra compacto para teléfonos muy angostos */
+@media (max-width: 420px) {
+    .panel-nav-ref a,
+    .panel-nav-link,
+    .panel-nav-ref .salir-link {
+        font-size: 0.9rem;
+        padding: 0.24rem 0.45rem;
+    }
+    .panel-nav-logo-izq { width: 26px; height: 26px; }
+}
+/* --- Dropdown menú para Administración Plantel --- */
+.panel-nav-dropdown-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.panel-nav-dropdown-toggle {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.panel-nav-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #1976d2 !important;
+    border-radius: 0 0 10px 10px;
+    box-shadow: 0 4px 16px rgba(25,118,210,0.13);
+    min-width: 220px;
+    z-index: 4000;
+    margin: 0;
+    padding: 0.3rem 0;
+    list-style: none;
+    font-family: 'Inter', 'Segoe UI', 'Arial', sans-serif;
+}
+.panel-nav-dropdown.show {
+    display: block !important;
+}
+@media (max-width: 768px) {
+    .panel-nav-dropdown.show {
+        position: fixed !important;
+        /* Posición (left/top) será establecida por JS para centrar bajo el trigger */
+        min-width: unset !important;
+        width: max-content !important; /* se ajusta al item más largo */
+        max-width: 98vw !important;
+        z-index: 4000 !important;
+        padding-right: 12px !important;
+        padding-left: 12px !important;
+    }
+    .panel-nav-dropdown-item { white-space: nowrap; }
+}
+.panel-nav-dropdown-container:hover .panel-nav-dropdown {
+    display: block;
+}
+.panel-nav-dropdown-item {
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.97rem;
+    padding: 0.55rem 1.3rem;
+    display: block;
+    transition: background 0.18s, color 0.18s;
+    border: none;
+    background: none;
+    font-family: inherit;
+    letter-spacing: 0.01em;
+}
+.panel-nav-dropdown-item:hover {
+    background: #2196f3 !important;
+    color: #fff !important;
+}
+/* Modal para agregar jugador */
+.modal-jugador-bg {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(25, 118, 210, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.modal-jugador-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(25,118,210,0.18);
+  padding: 2rem 2.2rem 1.5rem 2.2rem;
+  min-width: 320px;
+  max-width: 95vw;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.modal-jugador-card h2 {
+  margin-top: 0;
+  color: #1976d2;
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+.modal-jugador-card label {
+  display: flex;
+  flex-direction: column;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.7rem;
+  font-size: 1rem;
+}
+.modal-jugador-card input, .modal-jugador-card select {
+  margin-top: 0.2rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 8px;
+  border: 1.5px solid #b0bec5;
+  font-size: 1rem;
+}
+.modal-jugador-actions {
+  display: flex;
+  gap: 1.2rem;
+  margin-top: 1rem;
+}
+.modal-jugador-actions button {
+  background: linear-gradient(90deg, #1976d2 60%, #43a047 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.3rem;
+  font-size: 1.08rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.modal-jugador-actions button:hover {
+  background: #43a047;
+}

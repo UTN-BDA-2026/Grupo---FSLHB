@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body { font-family: Arial, sans-serif; }
+    h1 { font-size: 20px; margin: 0 0 8px 0; }
+    h2 { font-size: 16px; margin: 0 0 16px 0; color: #555; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ddd; padding: 6px 8px; font-size: 12px; }
+    th { background: #f2f2f2; text-align: left; }
+    td.num { text-align: center; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <h1>Ranking de Goleadores</h1>
+  <h2>{{ torneo }} — {{ categoria }}{% if fecha %} — Fecha {{ fecha }}{% endif %}</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 44px;">#</th>
+        <th>Club</th>
+        <th>Jugador</th>
+        <th style="width: 70px;">Goles</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for it in items %}
+      <tr>
+        <td class="num">{{ loop.index }}</td>
+        <td>{{ it.club }}</td>
+        <td>{{ it.jugador }}</td>
+        <td class="num">{{ it.goles }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

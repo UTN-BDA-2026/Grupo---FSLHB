@@ -1,0 +1,16 @@
+from app.models.usuario import Usuario
+from marshmallow import Schema, fields
+
+class UsuarioSchema(Schema):
+    id = fields.Int(dump_only=True)
+    username = fields.Str(required=True)
+    club = fields.Nested(lambda: ClubSchema(only=("id", "nombre")), dump_only=True)
+    is_admin = fields.Bool(dump_only=True)
+    is_operador = fields.Bool(dump_only=True)
+    puede_cargar_incidencias = fields.Bool(dump_only=True)
+    puede_precargar_equipos = fields.Bool(dump_only=True)
+
+
+class ClubSchema(Schema):
+    id = fields.Int()
+    nombre = fields.Str()

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administración de Noticias</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/club-panel.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+    <div class="top-bar">
+        <span id="fecha-hoy"></span>
+        <span class="topbar-divider"></span>
+        <a href="/" class="volver-inicio" title="Volver al inicio"><i class="fas fa-home"></i> Inicio</a>
+        <span class="topbar-divider"></span>
+        <span class="clubes-login"><i class="fas fa-user-shield"></i> Admin noticias</span>
+    </div>
+    <header>
+        <div style="display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;margin-top:14px;margin-bottom:8px;">
+            <img src="{{ url_for('static', filename='assets/img/logo-asociacion.png') }}" alt="Logo Asociación de Hockey" style="height:80px;max-width:150px;object-fit:contain;">
+            <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                <span style="font-size:1.5rem;font-weight:bold;line-height:1.1;">Administración de Noticias</span>
+                <span style="font-size:0.95rem;opacity:0.8;">Usuario: {{ current_user.username }}</span>
+            </div>
+        </div>
+    </header>
+    <main>
+        <div class="panel-container">
+            <h2>Gestión de Noticias</h2>
+            <div class="panel-content" id="panel-noticias">
+                <section class="panel-section">
+                    <h3>Nueva noticia</h3>
+                    <form id="form-noticia" class="panel-torneo-form" autocomplete="off">
+                        <label for="titulo">Título</label>
+                        <input type="text" id="titulo" name="titulo" required>
+
+                        <label for="resumen">Resumen (opcional)</label>
+                        <textarea id="resumen" name="resumen" rows="2"></textarea>
+
+                        <label for="contenido">Contenido</label>
+                        <textarea id="contenido" name="contenido" rows="5" required></textarea>
+
+                        <label for="imagen">URL de imagen (opcional)</label>
+                        <input type="text" id="imagen" name="imagen">
+
+                        <label for="fecha">Fecha</label>
+                        <input type="date" id="fecha" name="fecha">
+
+                        <button type="submit" class="btn-primario"><i class="fas fa-save"></i> Guardar noticia</button>
+                        <span id="form-noticia-msg" class="mensaje-form"></span>
+                    </form>
+                </section>
+
+                <section class="panel-section">
+                    <h3>Noticias cargadas</h3>
+                    <div id="lista-noticias" class="lista-noticias-admin">
+                        <!-- Se completa por JavaScript -->
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <div style="display:flex;align-items:center;justify-content:center;flex-direction:row;gap:16px;width:100%;">
+            <img src="{{ url_for('static', filename='assets/img/logo-asociacion.png') }}" alt="Logo Asociación de Hockey" style="height:48px;width:auto;">
+            <p style="margin:0; text-align:center; flex:1;">&copy; 2025 Asociación de Hockey sobre Césped</p>
+        </div>
+        <div id="redes-sociales"></div>
+    </footer>
+    <script src="{{ url_for('static', filename='js/admin-noticias.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/redes.js') }}"></script>
+</body>
+</html>

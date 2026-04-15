@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuerpo Técnico</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel-clubes.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body class="panel-bg">
+    <nav class="panel-nav-ref">
+        <img src="{{ url_for('static', filename='assets/img/logo-asociacion.png') }}" alt="Logo Asociación de Hockey sobre Césped" class="panel-header-logo-ref panel-nav-logo-izq">
+    <a href="/panel-clubes" class="inicio-link panel-nav-logo-der" title="Inicio"><i class="fas fa-home" aria-hidden="true"></i></a>
+        <div class="panel-nav-dropdown-container">
+            <a href="#" class="panel-nav-link panel-nav-dropdown-toggle" id="admin-plantel-link">
+                <span class="label-long">Administración Plantel</span>
+                <span class="label-short">Adm. Plantel</span>
+                <i class="fas fa-caret-down"></i>
+            </a>
+            <ul class="panel-nav-dropdown" id="admin-plantel-dropdown">
+                <li><a href="/precarga-equipos" class="panel-nav-dropdown-item">Precarga de Equipos</a></li>
+                <li><a href="/carga-incidencias" class="panel-nav-dropdown-item">Carga de incidencias</a></li>
+                <li><a href="/control-partido" class="panel-nav-dropdown-item">Control Partido</a></li>
+                <li><a href="/crear-lista-buena-fe" class="panel-nav-dropdown-item">Crear Lista de Buena Fe</a></li>
+                <li><a href="/jugadores" class="panel-nav-dropdown-item">Jugadores</a></li>
+                <li><a href="#" class="panel-nav-dropdown-item">Tribunal de Penas</a></li>
+            </ul>
+        </div>
+        <div class="panel-nav-dropdown-container">
+            <a href="#" class="panel-nav-link panel-nav-dropdown-toggle" id="param-club-link">
+                <span class="label-long">Parámetros del Club</span>
+                <span class="label-short">Parám. Club</span>
+                <i class="fas fa-caret-down"></i>
+            </a>
+            <ul class="panel-nav-dropdown" id="param-club-dropdown">
+                <li><a href="/equipos-categorias" class="panel-nav-dropdown-item">Equipos y Categorías</a></li>
+                <li><a href="/datos-club" class="panel-nav-dropdown-item">Datos del Club</a></li>
+                <li><a href="/cuerpo-tecnico" class="panel-nav-dropdown-item">Cuerpo Técnico</a></li>
+                <li><a href="#" class="panel-nav-dropdown-item">Tabla de Usuarios</a></li>
+            </ul>
+        </div>
+        <span class="panel-nav-club" id="nombre-club-nav"></span>
+    <a href="/login" class="salir-link" title="Salir"><i class="fas fa-sign-out-alt" aria-hidden="true"></i></a>
+    </nav>
+    <main class="panel-main">
+        <h1 class="panel-titulo">Cuerpo Técnico - <span id="club-name">Mi Club</span></h1>
+
+        <section class="panel-tabla-card">
+            <form id="form-ct" class="panel-torneo-form" autocomplete="off">
+                <!-- Fila 1: Nombre, Apellido, Documento -->
+                <div class="panel-torneo-form-row" style="display:flex; gap:16px; flex-wrap:nowrap;">
+                    <div class="panel-torneo-form-group" style="flex:1; min-width:0;">
+                        <label><b>Nombre</b>
+                            <input id="ct-nombre" type="text" placeholder="Nombre" required style="width:100%;">
+                        </label>
+                    </div>
+                    <div class="panel-torneo-form-group" style="flex:1; min-width:0;">
+                        <label><b>Apellido</b>
+                            <input id="ct-apellido" type="text" placeholder="Apellido" required style="width:100%;">
+                        </label>
+                    </div>
+                    <div class="panel-torneo-form-group" style="flex:1; min-width:0;">
+                        <label><b>Documento</b>
+                            <input id="ct-dni" type="text" placeholder="DNI" required style="width:100%;">
+                        </label>
+                    </div>
+                </div>
+                <!-- Fila 2: Rol y Botón Agregar -->
+                <div class="panel-torneo-form-row" style="display:flex; align-items:flex-end; gap:16px; flex-wrap:nowrap;">
+                    <div class="panel-torneo-form-group" style="flex:0 1 360px; min-width:280px;">
+                        <label><b>Rol</b>
+                            <select id="ct-rol" required style="width:100%;">
+                                <option value="DT">Director Técnico</option>
+                                <option value="PF">Preparador Físico</option>
+                            </select>
+                        </label>
+                    </div>
+                    <button class="panel-btn" type="submit">Agregar</button>
+                    <span id="ct-msg" style="margin-left:8px;color:#16a34a;align-self:flex-end;"></span>
+                </div>
+            </form>
+        </section>
+
+        <section class="panel-tabla-card">
+            <h2 class="tabla-sec-titulo">Listado del Cuerpo Técnico</h2>
+            <div class="tabla-sec-scroll">
+                <table class="tabla-sec-panel" id="tabla-ct">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Apellido</th>
+                            <th>Documento</th>
+                            <th>Rol</th>
+                            <th style="width:120px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/panel-nav.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/csrf.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/cuerpo-tecnico.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noticias - Hockey Acción San Rafael</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+    <div class="top-bar">
+        <span id="fecha-hoy"></span>
+        <span class="topbar-divider"></span>
+  <a href="/login" class="clubes-login"><i class="fas fa-lock"></i> Ingreso clubes</a>
+    </div>
+    <header>
+      <div class="header-brand" style="display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;margin-top:14px;margin-bottom:8px;">
+        <img src="{{ url_for('static', filename='assets/img/logo-asociacion.png') }}" alt="Logo Asociación de Hockey" style="height:80px;max-width:150px;object-fit:contain;">
+        <div class="brand-lines" style="display:flex;flex-direction:column;align-items:flex-start;">
+          <span style="font-size:1.5rem;font-weight:bold;line-height:1.1;">Hockey Acción</span>
+          <span style="font-size:1.5rem;font-weight:bold;line-height:1.1;">San Rafael</span>
+        </div>
+      </div>
+    <nav>
+      <div class="mobile-nav-actions">
+        <a href="/" class="home-button" aria-label="Inicio"><i class="fas fa-home"></i></a>
+        <button class="menu-toggle" aria-label="Abrir menú" aria-expanded="false">&#8801;</button>
+      </div>
+      <ul class="nav-rect" id="main-menu">
+                <li><a href="/" title="Inicio"><i class="fas fa-home"></i></a></li>
+                <li class="submenu">
+                    <a href="#" class="submenu-toggle">Institucional</a>
+          <ul class="dropdown">
+            <li><a href="/autoridades">Autoridades</a></li>
+            <li><a href="/reglamento">Reglamento</a></li>
+            <li><a href="/historial">Historial</a></li>
+          </ul>
+                </li>
+                <li><a href="/noticias">Noticias</a></li>
+                <li><a href="/calendario">Calendario</a></li>
+                <li><a href="/galeria">Galería</a></li>
+                <li><a href="/sponsors">Sponsors</a></li>
+                <li><a href="/contacto"><i class="fas fa-envelope" style="color:inherit;margin-right:6px;"></i>Contacto</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section id="noticia-destacada"></section>
+        <section id="todas-las-noticias"></section>
+    </main>
+  <footer>
+    <div class="footer-inner">
+      <img class="footer-logo" src="{{ url_for('static', filename='assets/img/logo-asociacion.png') }}" alt="Logo Asociación de Hockey">
+      <p class="footer-copy">&copy; 2025 Hockey Acción San Rafael</p>
+      <div id="redes-sociales">
+        <a href="https://www.instagram.com/deportes.sanrafael/" target="_blank" rel="noopener noreferrer" title="Instagram"><i class="fab fa-instagram"></i></a>
+        <a href="https://www.facebook.com/profile.php?id=100064279285764" target="_blank" rel="noopener noreferrer" title="Facebook"><i class="fab fa-facebook"></i></a>
+      </div>
+    </div>
+  </footer>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/redes.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/noticias.js') }}"></script>
+    <script>
+    // Mostrar la fecha actual en la barra superior
+    const fechaHoy = document.getElementById('fecha-hoy');
+    if (fechaHoy) {
+        const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        const hoy = new Date();
+        fechaHoy.textContent = `${hoy.getDate()} de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()}`;
+    }
+
+    // Mostrar la noticia destacada si viene el parámetro ?noticia=N
+    function getQueryParam(name) {
+        const url = new URL(window.location.href);
+        return url.searchParams.get(name);
+    }
+    function resolverSrcImagen(img) {
+      if (!img) return '';
+      if (img.startsWith('http://') || img.startsWith('https://') || img.startsWith('/')) {
+        return img;
+      }
+      return `/static/assets/img/${img}`;
+    }
+
+    const noticiaIdx = getQueryParam('noticia');
+    const main = document.querySelector('main');
+    const destacada = document.getElementById('noticia-destacada');
+    const todas = document.getElementById('todas-las-noticias');
+    if (noticiaIdx !== null) {
+      fetch(`/api/noticias/${noticiaIdx}`)
+        .then(r => r.json())
+        .then(n => {
+          if (!n.error) {
+            const imgSrc = resolverSrcImagen(n.imagen);
+            destacada.innerHTML = `
+              <article class="noticia-completa">
+                <h1 class="noticia-completa-titulo">${n.titulo}</h1>
+                <hr class="noticia-completa-separador">
+                ${imgSrc ? `<img src="${imgSrc}" alt="${n.titulo}" class="noticia-completa-img">` : ''}
+                <div class='noticia-completa-meta'><i class="fa-regular fa-calendar"></i> ${n.fecha ? n.fecha : 'Publicado por la Asociación'}</div>
+                <div class="noticia-completa-cuerpo">${n.contenido.replace(/(Viernes 20|Sábado 21|Domingo 22)/g, '<b>$1</b>').replace(/\n/g, '<br>')}</div>
+                <a href="/noticias" class="noticia-completa-volver">&larr; Volver a noticias</a>
+              </article>
+            `;
+          } else {
+            destacada.innerHTML = `<p>No se encontró la noticia.</p>`;
+          }
+        });
+    } else {
+      fetch('/api/noticias/')
+        .then(r => r.json())
+        .then(noticias => {
+          todas.innerHTML = noticias.map((n, idx) => {
+            const imgSrc = resolverSrcImagen(n.imagen);
+            return `
+            <article style="background:#fff;border-radius:10px;box-shadow:0 1px 6px rgba(0,100,0,0.08);padding:1.2rem 1.5rem;margin-bottom:1.5rem;max-width:600px;margin-left:auto;margin-right:auto;">
+              <h3>${n.titulo}</h3>
+              ${imgSrc ? `<img src="${imgSrc}" alt="${n.titulo}" style="max-width:100%;border-radius:8px;margin-bottom:0.7rem;">` : ''}
+              <p>${n.resumen}</p>
+              <a href="/noticias?noticia=${n.id}" style="color:#006400;font-weight:bold;">Ver más</a>
+            </article>
+          `}).join('');
+        });
+    }
+    </script>
+</body>
+</html>

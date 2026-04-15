@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creación Lista de Buena Fe</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel-clubes.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/crear-lista-buena-fe.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body class="panel-bg">
+    <!-- NAV INSTITUCIONAL -->
+    <nav class="panel-nav-ref">
+    <img src="{{ url_for('static', filename='assets/img/logo-asociacion.png') }}" alt="Logo Asociación de Hockey sobre Césped" class="panel-header-logo-ref panel-nav-logo-izq">
+    <a href="/panel-clubes" class="inicio-link panel-nav-logo-der" title="Inicio"><i class="fas fa-home" aria-hidden="true"></i></a>
+        <div class="panel-nav-dropdown-container">
+            <a href="#" class="panel-nav-link panel-nav-dropdown-toggle" id="admin-plantel-link">
+                <span class="label-long">Administración Plantel</span>
+                <span class="label-short">Adm. Plantel</span>
+                <i class="fas fa-caret-down"></i>
+            </a>
+            <ul class="panel-nav-dropdown" id="admin-plantel-dropdown">
+                <li><a href="/precarga-equipos" class="panel-nav-dropdown-item">Precarga de Equipos</a></li>
+                <li><a href="/carga-incidencias" class="panel-nav-dropdown-item">Carga de incidencias</a></li>
+                <li><a href="/control-partido" class="panel-nav-dropdown-item">Control Partido</a></li>
+                <li><a href="/crear-lista-buena-fe" class="panel-nav-dropdown-item">Crear Lista de Buena Fe</a></li>
+                <li><a href="/jugadores" class="panel-nav-dropdown-item">Jugadores</a></li>
+                <li><a href="#" class="panel-nav-dropdown-item">Tribunal de Penas</a></li>
+            </ul>
+        </div>
+        <div class="panel-nav-dropdown-container">
+            <a href="#" class="panel-nav-link panel-nav-dropdown-toggle" id="param-club-link">
+                <span class="label-long">Parámetros del Club</span>
+                <span class="label-short">Parám. Club</span>
+                <i class="fas fa-caret-down"></i>
+            </a>
+            <ul class="panel-nav-dropdown" id="param-club-dropdown">
+                <li><a href="/equipos-categorias" class="panel-nav-dropdown-item">Equipos y Categorías</a></li>
+                <li><a href="datos-club.html" class="panel-nav-dropdown-item">Datos del Club</a></li>
+                <li><a href="/cuerpo-tecnico" class="panel-nav-dropdown-item">Cuerpo Técnico</a></li>
+                <li><a href="#" class="panel-nav-dropdown-item">Cuerpo Técnico</a></li>
+                <li><a href="#" class="panel-nav-dropdown-item">Tabla de Usuarios</a></li>
+            </ul>
+        </div>
+        <span class="panel-nav-club" id="nombre-club-nav"></span>
+    <a href="/login" class="salir-link" title="Salir"><i class="fas fa-sign-out-alt" aria-hidden="true"></i></a>
+    </nav>
+    <main class="panel-main">
+        <h1 class="panel-titulo">Creación Lista de Buena Fe</h1>
+        <section class="panel-torneo-card">
+            <section class="panel-form-card">
+                <h2 class="form-titulo-centrado">Agregar Jugadora</h2>
+                <form id="form-jugadora" style="margin-bottom:2rem;">
+                    <div style="display:flex; gap:16px; width:100%;">
+                        <input type="text" name="dni" placeholder="DNI" required style="flex:1;" />
+                        <input type="text" name="apellido" placeholder="Apellido" required style="flex:1;" />
+                        <input type="text" name="nombre" placeholder="Nombre" required style="flex:1;" />
+                    </div>
+                    <div style="display:flex; gap:16px; width:100%; margin-top:16px;">
+                        <input type="date" name="fecha_nacimiento" placeholder="Fecha de Nacimiento" required style="flex:1;" />
+                        <input type="text" name="categoria" placeholder="Categoría" required style="flex:1;" />
+                    </div>
+                    <div style="display:flex; width:100%; margin-top:16px; align-items:center; justify-content:center;">
+                        <button type="submit" style="min-width:180px;">Agregar</button>
+                        <span id="form-msg" style="margin-left:1rem;color:red;"></span>
+                    </div>
+                </form>
+            </section>
+        </section>
+    <!-- Tabla de jugadores cargados eliminada por no tener funcionalidad -->
+        <!-- Modal para agregar jugador -->
+        <div id="modal-jugador" class="modal-jugador-bg" style="display:none;">
+          <div class="modal-jugador-card">
+            <h2>Agregar Jugador</h2>
+            <form id="form-jugador">
+              <label>Nombre completo:</label>
+              <input type="text" name="nombre" required>
+              <label>DNI:</label>
+              <input type="text" name="dni" required>
+              <label>Fecha de nacimiento:</label>
+              <input type="date" name="fecha_nac" required>
+              <label>División:</label>
+              <select name="division" required>
+                  <option value="Primera">Primera</option>
+                  <option value="Intermedia">Intermedia</option>
+                  <option value="Sub 18">Sub 18</option>
+                  <option value="Sub 16">Sub 16</option>
+              </select>
+              <label>Rama:</label>
+              <select name="rama" required>
+                  <option value="Femenino">Femenino</option>
+                  <option value="Masculino">Masculino</option>
+              </select>
+              <label>Foto:</label>
+              <input type="file" name="foto" accept="image/*" required>
+              <div class="modal-jugador-actions">
+                <button type="submit">Agregar</button>
+                <button type="button" id="cerrar-modal-jugador">Cancelar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+    </main>
+    <script src="{{ url_for('static', filename='js/panel-nav.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/csrf.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/crear-lista-buena-fe.js') }}"></script>
+</body>
+</html>

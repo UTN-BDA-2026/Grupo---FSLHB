@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Partido</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel-clubes.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/crear-lista-buena-fe.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body class="panel-bg">
+    <!-- NAV INSTITUCIONAL -->
+    <nav class="panel-nav-ref">
+        <img src="{{ url_for('static', filename='assets/img/logo-asociacion.png') }}" alt="Logo Asociación de Hockey sobre Césped" class="panel-header-logo-ref panel-nav-logo-izq">
+    <a href="/panel-clubes" class="inicio-link panel-nav-logo-der" title="Inicio"><i class="fas fa-home" aria-hidden="true"></i></a>
+        <div class="panel-nav-dropdown-container">
+            <a href="#" class="panel-nav-link panel-nav-dropdown-toggle" id="admin-plantel-link">
+                <span class="label-long">Administración Plantel</span>
+                <span class="label-short">Adm. Plantel</span>
+                <i class="fas fa-caret-down"></i>
+            </a>
+            <ul class="panel-nav-dropdown" id="admin-plantel-dropdown">
+                <li><a href="/precarga-equipos" class="panel-nav-dropdown-item">Precarga de Equipos</a></li>
+                <li><a href="/carga-incidencias" class="panel-nav-dropdown-item">Carga de incidencias</a></li>
+                <li><a href="/control-partido" class="panel-nav-dropdown-item">Control Partido</a></li>
+                <li><a href="/crear-lista-buena-fe" class="panel-nav-dropdown-item">Crear Lista de Buena Fe</a></li>
+                <li><a href="/jugadores" class="panel-nav-dropdown-item">Jugadores</a></li>
+                <li><a href="#" class="panel-nav-dropdown-item">Tribunal de Penas</a></li>
+            </ul>
+        </div>
+        {% if current_user.is_authenticated and not current_user.is_operador %}
+        <div class="panel-nav-dropdown-container">
+            <a href="#" class="panel-nav-link panel-nav-dropdown-toggle" id="param-club-link">
+                <span class="label-long">Parámetros del Club</span>
+                <span class="label-short">Parám. Club</span>
+                <i class="fas fa-caret-down"></i>
+            </a>
+            <ul class="panel-nav-dropdown" id="param-club-dropdown">
+                <li><a href="/equipos-categorias" class="panel-nav-dropdown-item">Equipos y Categorías</a></li>
+                <li><a href="/datos-club" class="panel-nav-dropdown-item">Datos del Club</a></li>
+                <li><a href="/cuerpo-tecnico" class="panel-nav-dropdown-item">Cuerpo Técnico</a></li>
+                <li><a href="#" class="panel-nav-dropdown-item">Cuerpo Técnico</a></li>
+                <li><a href="#" class="panel-nav-dropdown-item">Tabla de Usuarios</a></li>
+            </ul>
+        </div>
+        {% endif %}
+        <span class="panel-nav-club" id="nombre-club-nav"></span>
+    <a href="/login" class="salir-link" title="Salir"><i class="fas fa-sign-out-alt" aria-hidden="true"></i></a>
+    </nav>
+    <main class="panel-main">
+        <h1 class="panel-titulo">Control de Partidos</h1>
+        <section class="panel-torneo-card" style="margin-top:2rem;">
+            <form id="control-partido-form" class="panel-torneo-form" autocomplete="off">
+                <div class="panel-torneo-form-group">
+                    <label for="torneo-control-select"><b>Torneo:</b></label>
+                    <select id="torneo-control-select" name="torneo" required>
+                        <option value="">Seleccione Torneo</option>
+                    </select>
+                </div>
+                <div class="panel-torneo-form-group">
+                    <label for="categoria-control-select"><b>Categoría:</b></label>
+                    <select id="categoria-control-select" name="categoria" required>
+                        <option value="">Seleccione Categoría</option>
+                    </select>
+                </div>
+                <div class="panel-torneo-form-group">
+                    <label for="fecha-control-select"><b>Fecha:</b></label>
+                    <select id="fecha-control-select" name="fecha_numero" required>
+                        <option value="">Seleccione Fecha</option>
+                    </select>
+                </div>
+                <div class="panel-torneo-form-group" style="min-width:320px;">
+                    <label for="encuentro-control-select"><b>Encuentro:</b></label>
+                    <select id="encuentro-control-select" name="partido" required style="width:100%">
+                        <option value="">Seleccione Encuentro</option>
+                    </select>
+                </div>
+            </form>
+        </section>
+
+        <section id="control-partido-detalle" style="display:none; margin-top:2rem;">
+            <h2>Detalle del encuentro</h2>
+            <div id="control-partido-resumen" class="panel-torneo-card" style="padding:1rem;"></div>
+            <div id="control-partido-cuerpo-tecnico"></div>
+            <div id="control-partido-goles" style="display:flex;justify-content:center;align-items:center;margin:2rem 0 1rem 0;gap:2rem;"></div>
+            <div id="control-partido-tarjetas" style="display:flex;justify-content:center;align-items:center;gap:2rem;"></div>
+            <div id="control-partido-incidencias" class="tablas-responsive" style="margin-top:2rem;"></div>
+            <div id="control-partido-observaciones" style="margin-top:1rem;"></div>
+        </section>
+
+        <div id="control-partido-msg" style="margin-top:1rem; color:#666;"></div>
+    </main>
+            <script src="{{ url_for('static', filename='js/panel-nav.js') }}"></script>
+            <script src="{{ url_for('static', filename='js/csrf.js') }}"></script>
+</body>
+<style>
+/* Layout responsive para tablas de equipos */
+#control-partido-incidencias.tablas-responsive {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(320px, 1fr));
+    gap: 2rem;
+    align-items: start;
+}
+#control-partido-incidencias.tablas-responsive > .tabla-equipo { width: 100%; }
+
+@media (max-width: 900px) {
+    #control-partido-incidencias.tablas-responsive {
+        grid-template-columns: 1fr;
+        gap: 1.2rem;
+    }
+}
+
+/* Ajustes de tarjetas y goles en móvil */
+@media (max-width: 900px) {
+    #control-partido-goles, #control-partido-tarjetas { flex-wrap: wrap; gap: 1rem !important; }
+}
+</style>
+<script src="{{ url_for('static', filename='js/control-partido.js') }}"></script>
+</html>

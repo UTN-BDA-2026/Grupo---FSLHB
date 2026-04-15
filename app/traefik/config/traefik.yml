@@ -1,0 +1,30 @@
+global:
+  sendAnonymousUsage: true
+
+api:
+  dashboard: true
+  insecure: false
+
+providers:
+  file:
+    filename: /etc/traefik/config.yml
+    watch: true
+
+
+log:
+  level: INFO
+  format: common
+
+entryPoints:
+  http:
+    address: ":80"
+  https:
+    address: ":443"
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: "hernanyailen@gmail.com"
+      storage: "/acme/acme.json"
+      httpChallenge:
+        entryPoint: http

@@ -1,0 +1,29 @@
+http:
+  middlewares:
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+  routers:
+    hockey:
+      rule: "Host(`hockeyaccionsanrafael.com`) || Host(`www.hockeyaccionsanrafael.com`)"
+      entryPoints:
+        - https
+      tls:
+        certResolver: letsencrypt
+      service: hockey
+
+    http-catchall:
+      rule: "HostRegexp(`{host:.+}`)"
+      entryPoints:
+        - http
+      middlewares:
+        - redirect-to-https
+      service: hockey
+
+  services:
+    hockey:
+      loadBalancer:
+        servers:
+          - url: "http://app:5000"

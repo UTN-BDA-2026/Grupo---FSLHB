@@ -1,0 +1,27 @@
+.panel-btn-secondary {
+    background: #f4f8fb;
+    color: #222;
+    border: 1.5px solid #b0bec5;
+    border-radius: 8px;
+    padding: 0.45rem 1.1rem;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(25,118,210,0.06);
+    transition: background 0.18s, box-shadow 0.18s;
+    display: flex;
+    align-items: center;
+    margin-top: 1.2rem;
+}
+
+.panel-btn-secondary:hover {
+    background: #e3f2fd;
+    color: #1976d2;
+    border-color: #1976d2;
+}
+
+/* Botones principales más compactos solo en esta tarjeta */
+.panel-form-card .panel-btn {
+    padding: 0.45rem 1.1rem;
+    font-size: 1rem;
+}

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Precarga de Equipos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel-clubes.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/crear-lista-buena-fe.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body class="panel-bg">
+    <!-- NAV INSTITUCIONAL -->
+    <nav class="panel-nav-ref">
+    <img src="{{ url_for('static', filename='assets/img/logo-asociacion.png') }}" alt="Logo Asociación de Hockey sobre Césped" class="panel-header-logo-ref panel-nav-logo-izq">
+    <a href="/panel-clubes" class="inicio-link panel-nav-logo-der" title="Inicio"><i class="fas fa-home" aria-hidden="true"></i></a>
+        <div class="panel-nav-dropdown-container">
+            <a href="#" class="panel-nav-link panel-nav-dropdown-toggle" id="admin-plantel-link">
+                <span class="label-long">Administración Plantel</span>
+                <span class="label-short">Adm. Plantel</span>
+                <i class="fas fa-caret-down"></i>
+            </a>
+            <ul class="panel-nav-dropdown" id="admin-plantel-dropdown">
+                <li><a href="/precarga-equipos" class="panel-nav-dropdown-item">Precarga de Equipos</a></li>
+                {% if current_user.is_authenticated and current_user.puede_cargar_incidencias %}
+                <li><a href="/carga-incidencias" class="panel-nav-dropdown-item">Carga de incidencias</a></li>
+                {% endif %}
+                <li><a href="/control-partido" class="panel-nav-dropdown-item">Control Partido</a></li>
+                <li><a href="/crear-lista-buena-fe" class="panel-nav-dropdown-item">Crear Lista de Buena Fe</a></li>
+                <li><a href="/jugadores" class="panel-nav-dropdown-item">Jugadores</a></li>
+                <li><a href="#" class="panel-nav-dropdown-item">Tribunal de Penas</a></li>
+            </ul>
+        </div>
+        {% if current_user.is_authenticated and not current_user.is_operador %}
+        <div class="panel-nav-dropdown-container">
+            <a href="#" class="panel-nav-link panel-nav-dropdown-toggle" id="param-club-link">
+                <span class="label-long">Parámetros del Club</span>
+                <span class="label-short">Parám. Club</span>
+                <i class="fas fa-caret-down"></i>
+            </a>
+            <ul class="panel-nav-dropdown" id="param-club-dropdown">
+                <li><a href="/equipos-categorias" class="panel-nav-dropdown-item">Equipos y Categorías</a></li>
+                <li><a href="/datos-club" class="panel-nav-dropdown-item">Datos del Club</a></li>
+                <li><a href="/cuerpo-tecnico" class="panel-nav-dropdown-item">Cuerpo Técnico</a></li>
+                <li><a href="#" class="panel-nav-dropdown-item">Cuerpo Técnico</a></li>
+                <li><a href="#" class="panel-nav-dropdown-item">Tabla de Usuarios</a></li>
+            </ul>
+        </div>
+        {% endif %}
+        <span class="panel-nav-club" id="nombre-club-nav"></span>
+    <a href="/login" class="salir-link" title="Salir"><i class="fas fa-sign-out-alt" aria-hidden="true"></i></a>
+    </nav>
+    <main class="panel-main">
+    <h1 class="panel-titulo">Precarga de Equipos - <span id="club-name">Mesa de Control</span></h1>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Usar solo la clave unificada 'nombreClub'; si no existe, mostrar 'Mesa de Control'
+                const nombre = localStorage.getItem('nombreClub');
+                document.getElementById('club-name').textContent = (nombre && nombre.trim() !== '') ? nombre : 'Mesa de Control';
+            });
+        </script>
+        <section class="panel-torneo-card">
+            <form id="precarga-form" class="panel-torneo-form">
+                <div class="panel-torneo-form-group">
+                    <label for="torneo-select"><b>Torneo:</b></label>
+                    <select id="torneo-select" name="torneo" required>
+                        <option value="">Seleccione Torneo</option>
+                    </select>
+                </div>
+                <div class="panel-torneo-form-group">
+                    <label for="categoria-select"><b>Categoría:</b></label>
+                    <select id="categoria-select" name="Categoría" required>
+                        <option value="">Seleccione Categoría</option>
+                        <option value="damas_a">Damas A</option>
+                        <option value="damas_b">Damas B</option>
+                        <option value="damas_c">Damas C</option>
+                        <option value="caballeros">Caballeros</option>
+                        <option value="mamis">Mamis</option>
+                    </select>
+                </div>
+                <div class="panel-torneo-form-group">
+                    <label for="fecha-select"><b>Fecha Nro:</b></label>
+                    <select id="fecha-select" name="fecha">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+                <div class="panel-torneo-form-group">
+                    <label for="partido-select"><b>Partido (Nro de partido para filtrar):</b></label>
+                    <select id="partido-select" name="partido" required style="width:100%">
+                        <option value="">Seleccione Partido</option>
+                    </select>
+                    <div id="partido-info" style="display:none; margin-top:0.5rem; color:#444; font-size:0.95rem;"></div>
+                </div>
+                <!-- Club destino de la precarga (solo operadores) -->
+                <div class="panel-torneo-form-group" id="club-precarga-wrapper" style="display:none;">
+                    <label for="club-precarga-select"><b>Club a precargar:</b></label>
+                    <select id="club-precarga-select" style="width:100%">
+                        <!-- opciones por partido: local/visitante -->
+                    </select>
+                </div>
+                <div style="width:100%;display:flex;justify-content:center;margin-top:1.5rem;">
+                    <button type="submit" class="panel-btn">Acceder a la Precarga <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </form>
+        </section>
+        <section id="jugadoras-section" style="display:none; margin-top:2rem;">
+            <div id="jugadoras-contador" style="display:none; justify-content:center; align-items:center; margin-bottom:1rem;">
+                <span style="display:inline-block; background:#1976d2; color:white; border-radius:50%; width:48px; height:48px; font-size:1.5rem; font-weight:bold; display:flex; align-items:center; justify-content:center;">0</span>
+            </div>
+            <h2>Jugadoras disponibles</h2>
+            <table id="tabla-jugadoras" class="tabla-sec-panel">
+                <thead>
+                    <tr>
+                        <th>DNI</th>
+                        <th>Apellido</th>
+                        <th>Nombre</th>
+                        <th>Categoría</th>
+                        <th>Seleccionar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Jugadoras se cargan por JS -->
+                </tbody>
+            </table>
+            <div id="jugadoras-msg" style="margin-top:1rem;color:green;"></div>
+            <div style="margin-top:1rem; text-align:center;">
+                <button id="btn-confirmar-precarga" class="panel-btn" style="display:none;">Confirmar Precarga</button>
+            </div>
+        </section>
+    </main>
+    <script src="{{ url_for('static', filename='js/panel-nav.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/csrf.js') }}"></script>
+    <script>
+        // Evitar que claves antiguas sobrescriban el título
+        (function(){
+            const el = document.getElementById('club-name');
+            const nombre = localStorage.getItem('nombreClub');
+            el.textContent = (nombre && nombre.trim() !== '') ? nombre : 'Mesa de Control';
+        })();
+    </script>
+    <script src="{{ url_for('static', filename='js/precarga-jugadoras.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,242 @@
+/* Responsive: apilar campos en móvil */
+@media (max-width: 600px) {
+    #form-jugadora > div {
+        flex-direction: column !important;
+        gap: 10px;
+    }
+    #form-jugadora input,
+    #form-jugadora select {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+    #form-jugadora button {
+        width: 100%;
+        min-width: 0;
+        margin: 0 auto;
+        display: block;
+    }
+}
+/* Centrado de título del formulario Agregar Jugadora */
+.form-titulo-centrado {
+    text-align: center;
+    width: 100%;
+    display: block;
+}
+/* Formulario Agregar Jugadora llamativo */
+.panel-form-card {
+    background: linear-gradient(135deg, #e3f0ff 0%, #f8fff3 100%);
+    border: 2px solid #007bff;
+    border-radius: 16px;
+    box-shadow: 0 6px 24px rgba(0, 123, 255, 0.10);
+    padding: 32px 24px 24px 24px;
+    margin: 32px auto 0 auto;
+    max-width: 900px;
+}
+
+.panel-form-card h2 {
+    color: #007bff;
+    font-size: 2.2rem;
+    margin-bottom: 24px;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+#form-jugadora {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+#form-jugadora input[type="text"],
+#form-jugadora input[type="date"] {
+    padding: 10px 12px;
+    border: 1.5px solid #007bff;
+    border-radius: 6px;
+    font-size: 1rem;
+    background: #fafdff;
+    transition: border 0.2s;
+    min-width: 160px;
+}
+
+#form-jugadora input[type="text"]:focus,
+#form-jugadora input[type="date"]:focus {
+    border: 2px solid #28a745;
+    outline: none;
+}
+
+#form-jugadora button[type="submit"] {
+    background: linear-gradient(90deg, #007bff 60%, #28a745 100%);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 22px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.08);
+    transition: background 0.2s, transform 0.1s;
+}
+
+#form-jugadora button[type="submit"]:hover {
+    background: linear-gradient(90deg, #0056b3 60%, #218838 100%);
+    transform: translateY(-2px) scale(1.04);
+}
+
+#form-msg {
+    font-size: 1rem;
+    margin-left: 10px;
+    color: #e74c3c;
+    font-weight: 600;
+}
+body {
+    font-family: 'Roboto', sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #333333;
+    background-color: #f4f6f9;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+.panel-main {
+    padding: 20px;
+    max-width: 1200px;
+    margin: auto;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-top: 0;
+}
+
+.panel-titulo {
+    font-family: 'Roboto', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #222222;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.panel-tabla-card {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.tabla-sec-panel {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.tabla-sec-panel th {
+    background-color: #007bff;
+    color: #ffffff;
+    text-align: left;
+    padding: 10px;
+    font-size: 14px;
+}
+
+.tabla-sec-panel td {
+    padding: 10px;
+    font-size: 14px;
+    color: #333333;
+    border-bottom: 1px solid #dddddd;
+}
+
+.tabla-sec-panel tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.tabla-sec-panel tr:hover {
+    background-color: #f1f1f1;
+}
+
+.tabla-sec-scroll {
+    overflow-x: auto;
+}
+
+.panel-torneo-form-group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 0;
+    background-color: transparent;
+    box-shadow: none;
+    width: 100%;
+    max-width: 800px;
+    margin: auto;
+}
+
+.panel-torneo-form-group .division-container {
+    flex-grow: 1;
+}
+
+.panel-torneo-form-group .cargar-jugador-container {
+    flex-shrink: 0;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+}
+
+#cargar-jugador-btn {
+    background: linear-gradient(to right, #007bff, #28a745);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#cargar-jugador-btn:hover {
+    background: linear-gradient(to right, #0056b3, #218838);
+}
+
+.panel-nav-dropdown {
+    background-color: #0056b3;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    list-style: none;
+    margin: 0;
+    display: none;
+    position: absolute;
+    z-index: 1000;
+}
+
+.panel-nav-dropdown-item {
+    font-family: 'Roboto', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #ffffff;
+    padding: 10px 15px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.panel-nav-dropdown-item:hover {
+    background-color: #007bff;
+    border-radius: 4px;
+}
+
+/* Ajuste para mantener el menú desplegable visible mientras el mouse esté sobre el botón o el menú */
+.panel-nav-dropdown-toggle:hover + .panel-nav-dropdown,
+.panel-nav-dropdown:hover {
+    display: block;
+}
+
+.panel-nav-dropdown-item::before {
+    content: none;
+}

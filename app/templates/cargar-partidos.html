@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cargar Partidos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel-clubes.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/crear-lista-buena-fe.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        .chip { background:#f6a94e; padding:6px 10px; border-radius:8px; display:inline-block; min-width:48px; }
+        .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+    </head>
+<body class="panel-bg">
+    <nav class="panel-nav-ref">
+        <img src="{{ url_for('static', filename='assets/img/logo-asociacion.png') }}" class="panel-header-logo-ref panel-nav-logo-izq">
+        <a href="/panel-clubes" class="inicio-link panel-nav-logo-der"><i class="fas fa-home"></i> Inicio</a>
+        <span class="panel-nav-club" id="nombre-club-nav"></span>
+        <a href="/login" class="salir-link"><i class="fas fa-sign-out-alt"></i> Salir</a>
+    </nav>
+    <main class="panel-main">
+        <h1 class="panel-titulo">Cargar Partidos</h1>
+        <section class="panel-form-card" style="max-width:900px;margin:auto;">
+            <div class="grid">
+                <label>
+                    <b>Torneo</b>
+                    <select id="torneo" required>
+                        <option value="">Seleccione</option>
+                        <option value="Clausura Damas (2025)">Clausura Damas (2025)</option>
+                        <option value="Clausura Caballeros (2025)">Clausura Caballeros (2025)</option>
+                        <option value="Clausura Mamis (2025)">Clausura Mamis (2025)</option>
+                    </select>
+                </label>
+                <label>
+                    <b>Categoría</b>
+                    <select id="categoria" required>
+                        <option value="">Seleccione Categoría</option>
+                    </select>
+                </label>
+                <label>
+                    <b>Fecha N°</b>
+                    <input id="fecha_numero" type="number" min="1" placeholder="Ej: 12">
+                </label>
+                <label>
+                    <b>Bloque</b>
+                    <input id="bloque" type="text" placeholder="Ej: C" maxlength="5">
+                </label>
+                <label>
+                    <b>Fecha y Hora</b>
+                    <input id="fecha_hora" type="datetime-local" placeholder="2025-10-11T16:30">
+                </label>
+                <label>
+                    <b>Cancha</b>
+                    <input id="cancha" type="text" placeholder="Nombre de cancha">
+                </label>
+                <label>
+                    <b>Equipo Local</b>
+                    <select id="equipo_local" required></select>
+                </label>
+                <label>
+                    <b>Equipo Visitante</b>
+                    <select id="equipo_visitante" required></select>
+                </label>
+            </div>
+            <div style="margin-top:16px; display:flex; gap:8px;">
+                <button id="btn-crear" class="panel-btn" type="button">Crear Partido</button>
+                <span id="msg" style="align-self:center; color:red;"></span>
+            </div>
+            <hr style="margin:16px 0;">
+            <div>
+                <h3>Partidos programados</h3>
+                <div style="display:flex; gap:8px; margin-bottom:8px;">
+                    <select id="filtro_torneo">
+                        <option value="">Todos los torneos</option>
+                        <option value="Clausura Damas (2025)">Clausura Damas (2025)</option>
+                        <option value="Clausura Caballeros (2025)">Clausura Caballeros (2025)</option>
+                        <option value="Clausura Mamis (2025)">Clausura Mamis (2025)</option>
+                    </select>
+                    <select id="filtro_categoria">
+                        <option value="">Todas las categorías</option>
+                    </select>
+                    <button id="btn-refrescar" class="panel-btn-secondary" type="button">Refrescar</button>
+                </div>
+                <table class="tabla-sec-panel" id="tabla-partidos">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Torneo</th>
+                            <th>Categoría</th>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Encuentro</th>
+                            <th>Cancha</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <script src="{{ url_for('static', filename='js/cargar-partidos.js') }}"></script>
+</body>
+</html>
