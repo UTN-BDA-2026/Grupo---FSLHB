@@ -26,10 +26,24 @@ services:
     ports:
       - "5433:5432"  # usa 5433 en el host para evitar conflicto si 5432 ya está ocupado
 
+  mariadb:
+    image: mariadb:10.11
+    restart: always
+    environment:
+      MARIADB_DATABASE: hockey
+      MARIADB_USER: hockeyuser
+      MARIADB_PASSWORD: hockeypass
+      MARIADB_ROOT_PASSWORD: rootpass
+    ports:
+      - "3307:3306" # 3307 en host para evitar conflicto si 3306 está ocupado
+    volumes:
+      - mariadbdata:/var/lib/mysql
+
   app:
     build: .
     depends_on:
       - db
+      - mariadb
       - traefik
     ports:
       - "5000:5000"
@@ -39,8 +53,8 @@ services:
       FORCE_HTTPS: "false"
       # Local: permitir sesión/login por HTTP (cookies no-secure)
       SESSION_COOKIE_SECURE: "false"
-      DATABASE_URL: postgresql://hockeyuser:hockeypass@db:5432/hockey
-      PROD_DATABASE_URI: postgresql://hockeyuser:hockeypass@db:5432/hockey
+      DATABASE_URL: mysql+pymysql://hockeyuser:hockeypass@mariadb:3306/hockey
+      PROD_DATABASE_URI: mysql+pymysql://hockeyuser:hockeypass@mariadb:3306/hockey
       FLASK_APP: app
       FLASK_DEBUG: "0"
       HOST: 0.0.0.0
@@ -59,5 +73,6 @@ services:
 
 volumes:
   pgdata:
+  mariadbdata:
   traefik_acme:
 

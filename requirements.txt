@@ -1,9 +1,9 @@
 psycopg2-binary==2.9.11
+PyMySQL==1.1.1
 Flask
 Flask-SQLAlchemy
 SQLAlchemy==2.0.40
 python-dotenv==1.1.0
-flask-marshmallow==0.15.0
 Flask-Migrate==4.1.0
 marshmallow==3.20.1
 marshmallow-sqlalchemy==0.29.0

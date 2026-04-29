@@ -38,7 +38,8 @@ class PartidoRepository:
             q = q.filter(func.lower(Partido.estado) == filtros['estado'].lower())
         if filtros.get('estado_not'):
             q = q.filter(Partido.estado != filtros['estado_not'])
-        return q.order_by(Partido.fecha_hora.nullslast()).all()
+        # MariaDB/MySQL no soporta `NULLS LAST`; se emula ordenando primero por "no es NULL"
+        return q.order_by(Partido.fecha_hora.is_(None), Partido.fecha_hora).all()
 
     @staticmethod
     def actualizar(partido: Partido):
