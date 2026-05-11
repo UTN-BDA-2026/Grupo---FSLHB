@@ -14,36 +14,23 @@ services:
     # Configuración por archivo traefik.yml/config.yml y certificados mkcert
     labels:
       - "traefik.enable=true"
-  db:
-    image: postgres:15
-    restart: always
-    environment:
-      POSTGRES_DB: hockey
-      POSTGRES_USER: hockeyuser
-      POSTGRES_PASSWORD: hockeypass
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"  # usa 5433 en el host para evitar conflicto si 5432 ya está ocupado
 
-  mariadb:
-    image: mariadb:10.11
+  mongodb:
+    image: mongo:7
     restart: always
     environment:
-      MARIADB_DATABASE: hockey
-      MARIADB_USER: hockeyuser
-      MARIADB_PASSWORD: hockeypass
-      MARIADB_ROOT_PASSWORD: rootpass
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: adminpass
+      MONGO_INITDB_DATABASE: hockey
     ports:
-      - "3307:3306" # 3307 en host para evitar conflicto si 3306 está ocupado
+      - "27017:27017"
     volumes:
-      - mariadbdata:/var/lib/mysql
+      - mongodata:/data/db
 
   app:
     build: .
     depends_on:
-      - db
-      - mariadb
+      - mongodb
       - traefik
     ports:
       - "5000:5000"
@@ -53,8 +40,7 @@ services:
       FORCE_HTTPS: "false"
       # Local: permitir sesión/login por HTTP (cookies no-secure)
       SESSION_COOKIE_SECURE: "false"
-      DATABASE_URL: mysql+pymysql://hockeyuser:hockeypass@mariadb:3306/hockey
-      PROD_DATABASE_URI: mysql+pymysql://hockeyuser:hockeypass@mariadb:3306/hockey
+      MONGO_URI: mongodb://admin:adminpass@mongodb:27017/hockey?authSource=admin
       FLASK_APP: app
       FLASK_DEBUG: "0"
       HOST: 0.0.0.0
@@ -72,7 +58,6 @@ services:
     # Traefik ahora se configura solo por archivo (config.yml), no por labels.
 
 volumes:
-  pgdata:
-  mariadbdata:
+  mongodata:
   traefik_acme:
 
