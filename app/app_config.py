@@ -19,18 +19,17 @@ def apply_app_config(app, config_name: str | None = None) -> str:
     config_name = config_name or os.getenv('FLASK_ENV', 'production')
 
     if config_name == 'testing':
-        db_uri = 'sqlite:///:memory:'
+        mongo_uri = 'mongodb://localhost:27017/hockey_test'
         app.config['TESTING'] = True
     elif config_name == 'development':
-        db_uri = os.environ.get('DEV_DATABASE_URI') or 'sqlite:///dev.db'
+        mongo_uri = os.environ.get('MONGO_URI') or 'mongodb://localhost:27017/hockey_dev'
         app.config['DEBUG'] = True
     else:
-        db_uri = os.environ.get('PROD_DATABASE_URI')
+        mongo_uri = os.environ.get('MONGO_URI') or 'mongodb://localhost:27017/hockey'
         app.config['DEBUG'] = False
         app.config['TESTING'] = False
 
-    app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['MONGO_URI'] = mongo_uri
     app.config['PREFERRED_URL_SCHEME'] = 'https'
 
     secret_key = os.environ.get('SECRET_KEY')
@@ -53,7 +52,6 @@ def apply_app_config(app, config_name: str | None = None) -> str:
         os.getenv('SESSION_COOKIE_SECURE', 'true' if not is_debug else 'false').lower()
         == 'true'
     )
-    app.config.setdefault('SQLALCHEMY_ENGINE_OPTIONS', {'pool_pre_ping': True})
 
     return config_name
 
