@@ -4,7 +4,8 @@ from flask_login import login_required, current_user
 from app.models import Jugadora
 from app.repositories.jugadora_repositorio import JugadoraRepository
 from app.mappings.jugadora_mapping import JugadoraSchema
-from app import db
+from app.extensions import mongo
+from bson import ObjectId
 
 jugadora_bp = Blueprint('jugadora', __name__)
 jugadora_schema = JugadoraSchema()
@@ -28,7 +29,7 @@ def crear_jugadora():
         return jsonify({'error': error}), 409
     return jsonify(jugadora_schema.dump(jugadora)), 201
 
-@jugadora_bp.route('/jugadoras/<int:id>', methods=['GET'])
+@jugadora_bp.route('/jugadoras/<id>', methods=['GET'])
 def obtener_jugadora(id):
     jugadora = JugadoraRepository.buscar_por_id(id)
     if not jugadora:
@@ -37,8 +38,8 @@ def obtener_jugadora(id):
 
 @jugadora_bp.route('/jugadoras', methods=['GET'])
 def obtener_jugadoras():
-    club_id = request.args.get('club_id', type=int)
-    equipo_id = request.args.get('equipo_id', type=int)
+    club_id = request.args.get('club_id')
+    equipo_id = request.args.get('equipo_id')
     if equipo_id:
         from app.repositories.equipo_repositorio import EquipoRepository
         equipo = EquipoRepository.buscar_por_id(equipo_id)
@@ -49,7 +50,7 @@ def obtener_jugadoras():
         # Filtrar por categoría si corresponde
         if equipo.categoria:
             def norm(s):
-                return (s or '').strip().lower().replace('_',' ').replace('\s+', ' ')
+                return (s or '').strip().lower().replace('_',' ')
             ec = norm(equipo.categoria)
             jugadoras = [j for j in jugadoras if norm(j.categoria) == ec]
     elif club_id:
@@ -61,25 +62,30 @@ def obtener_jugadoras():
 @jugadora_bp.route('/jugadoras/resumen', methods=['GET'])
 def resumen_jugadoras():
     """Devuelve un resumen de cantidad de jugadoras por club y categoría para depuración."""
-    from app.models import Club
-    rows = (
-        db.session.query(Jugadora.club_id, Club.nombre.label('club_nombre'), Jugadora.categoria, db.func.count(Jugadora.id).label('cantidad'))
-        .join(Club, Club.id == Jugadora.club_id)
-        .group_by(Jugadora.club_id, Club.nombre, Jugadora.categoria)
-        .order_by(Club.nombre.asc(), Jugadora.categoria.asc())
-        .all()
-    )
+    pipeline = [
+        {'$group': {
+            '_id': {'club_id': '$club_id', 'categoria': '$categoria'},
+            'cantidad': {'$sum': 1}
+        }},
+        {'$sort': {'_id.club_id': 1, '_id.categoria': 1}}
+    ]
+    results = list(mongo.db.jugadoras.aggregate(pipeline))
+
+    # Obtener nombres de clubes
+    club_ids = list(set(r['_id']['club_id'] for r in results if r['_id'].get('club_id')))
+    clubes = {d['_id']: d['nombre'] for d in mongo.db.clubes.find({'_id': {'$in': club_ids}}, {'nombre': 1})}
+
     data = [
         {
-            'club_id': r.club_id,
-            'club_nombre': r.club_nombre,
-            'categoria': r.categoria,
-            'cantidad': r.cantidad
-        } for r in rows
+            'club_id': str(r['_id']['club_id']),
+            'club_nombre': clubes.get(r['_id']['club_id'], ''),
+            'categoria': r['_id'].get('categoria') or '',
+            'cantidad': r['cantidad']
+        } for r in results
     ]
     return jsonify(data), 200
 
-@jugadora_bp.route('/jugadoras/<int:id>', methods=['PUT'])
+@jugadora_bp.route('/jugadoras/<id>', methods=['PUT'])
 @login_required
 def actualizar_jugadora(id):
     if getattr(current_user, 'club_id', None) is None:
@@ -96,7 +102,7 @@ def actualizar_jugadora(id):
     JugadoraRepository.actualizar_jugadora(jugadora)
     return jsonify(jugadora_schema.dump(jugadora))
 
-@jugadora_bp.route('/jugadoras/<int:id>', methods=['DELETE'])
+@jugadora_bp.route('/jugadoras/<id>', methods=['DELETE'])
 @login_required
 def borrar_jugadora(id):
     # Verificar permisos: solo usuarios con club_id

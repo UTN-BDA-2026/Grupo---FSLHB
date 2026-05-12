@@ -1,28 +1,33 @@
 from flask import Blueprint, jsonify, request
-from app import db
-from app.models.jugadora import Jugadora
+from app.extensions import mongo
 
 categorias_bp = Blueprint('categorias', __name__)
 
 @categorias_bp.route('/api/equipos-categorias', methods=['GET'])
 def equipos_categorias_api():
-    club_id = request.args.get('club_id', type=int)
-    query = db.session.query(
-        Jugadora.rama,
-        Jugadora.division,
-        db.func.count(Jugadora.id).label('jugadores')
-    )
+    club_id = request.args.get('club_id')
+
+    pipeline = []
     if club_id:
-        query = query.filter(Jugadora.club_id == club_id)
-    query = query.group_by(Jugadora.rama, Jugadora.division)
-    resultados = query.all()
+        from bson import ObjectId
+        pipeline.append({'$match': {'club_id': ObjectId(club_id)}})
+    pipeline.extend([
+        {'$group': {
+            '_id': {'categoria': '$categoria'},
+            'jugadores': {'$sum': 1}
+        }},
+        {'$sort': {'_id.categoria': 1}}
+    ])
+
+    results = mongo.db.jugadoras.aggregate(pipeline)
     data = [
         {
-            'rama': r or '',
-            'division': d or '',
-            'bloque': '',  # Si tienes bloque, cámbialo aquí
-            'jugadores': j
+            'rama': '',
+            'division': '',
+            'categoria': r['_id'].get('categoria') or '',
+            'bloque': '',
+            'jugadores': r['jugadores']
         }
-        for r, d, j in resultados
+        for r in results
     ]
     return jsonify(data)

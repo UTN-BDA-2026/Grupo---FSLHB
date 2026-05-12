@@ -1,17 +1,19 @@
 from flask import Blueprint, request, jsonify
 from app.services.cuerpo_tecnico_service import CuerpoTecnicoService
+from app.extensions import mongo
 from app.models.cuerpo_tecnico import CuerpoTecnico
+from bson import ObjectId
 
 bp_cuerpo_tecnico = Blueprint('cuerpo_tecnico', __name__, url_prefix='/cuerpo-tecnico')
 
 @bp_cuerpo_tecnico.route('/', methods=['GET'])
 def listar():
-    club_id = request.args.get('club_id', type=int)
+    club_id = request.args.get('club_id')
     rows = CuerpoTecnicoService.listar(club_id)
     return jsonify([
         {
-            'id': r.id,
-            'club_id': r.club_id,
+            'id': str(r.id),
+            'club_id': str(r.club_id),
             'nombre': r.nombre,
             'apellido': r.apellido,
             'dni': r.dni,
@@ -20,14 +22,15 @@ def listar():
         } for r in rows
     ])
 
-@bp_cuerpo_tecnico.route('/<int:id>', methods=['GET'])
+@bp_cuerpo_tecnico.route('/<id>', methods=['GET'])
 def obtener(id):
-    ct = CuerpoTecnico.query.get(id)
-    if not ct:
+    doc = mongo.db.cuerpo_tecnico.find_one({'_id': ObjectId(id)})
+    if not doc:
         return jsonify({'error': 'No encontrado'}), 404
+    ct = CuerpoTecnico.from_dict(doc)
     return jsonify({
-        'id': ct.id,
-        'club_id': ct.club_id,
+        'id': str(ct.id),
+        'club_id': str(ct.club_id),
         'nombre': ct.nombre,
         'apellido': ct.apellido,
         'dni': ct.dni,
@@ -46,15 +49,16 @@ def crear():
             'missing': missing
         }), 400
     try:
+        # Convert club_id to ObjectId
+        data['club_id'] = ObjectId(data['club_id'])
         ct = CuerpoTecnicoService.crear(data)
-        return jsonify({'id': ct.id}), 201
+        return jsonify({'id': str(ct.id)}), 201
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
     except Exception as e:
-        # Loggear e si se desea, pero devolver JSON
         return jsonify({'error': 'No se pudo crear', 'detail': str(e)}), 500
 
-@bp_cuerpo_tecnico.route('/<int:id>', methods=['PUT'])
+@bp_cuerpo_tecnico.route('/<id>', methods=['PUT'])
 def actualizar(id):
     data = request.json
     try:
@@ -65,7 +69,7 @@ def actualizar(id):
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
 
-@bp_cuerpo_tecnico.route('/<int:id>', methods=['DELETE'])
+@bp_cuerpo_tecnico.route('/<id>', methods=['DELETE'])
 def eliminar(id):
     ok = CuerpoTecnicoService.eliminar(id)
     return jsonify({'ok': ok})
