@@ -5,7 +5,9 @@ from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import mm
 from PyPDF2 import PdfReader, PdfWriter
+from bson import ObjectId
 
+from app.extensions import mongo
 from app.models.partido import Partido
 from app.services.partido_service import PartidoService
 from app.services.precarga_service import PrecargaService
@@ -14,7 +16,6 @@ from app.services.cuerpo_tecnico_partido_service import CuerpoTecnicoPartidoServ
 from app.services.cuerpo_tecnico_service import CuerpoTecnicoService
 from app.services.arbitro_partido_service import ArbitroPartidoService
 from app.services.nota_partido_service import NotaPartidoService
-from app.models.cuerpo_tecnico import CuerpoTecnico
 from app.services.club_service import ClubService
 
 
@@ -163,10 +164,10 @@ def generar_planilla_pdf(partido_id: int) -> str:
         return t
     def _ct_name(ct_id):
         try:
-            row = CuerpoTecnico.query.get(int(ct_id)) if ct_id else None
+            row = mongo.db.cuerpo_tecnico.find_one({'_id': ObjectId(ct_id)}) if ct_id else None
             if not row:
                 return ''
-            return f"{row.apellido} {row.nombre}".strip()
+            return f"{row.get('apellido', '')} {row.get('nombre', '')}".strip()
         except Exception:
             return ''
     dt_local = pf_local = dt_visit = pf_visit = ''
@@ -304,9 +305,13 @@ def generar_planilla_pdf(partido_id: int) -> str:
     if 'torneo' in POS.get('header', {}):
         _draw_text(c, *POS['header']['torneo'], torneo, 12, True, scale_x=scale_x, scale_y=scale_y)
 
-    # Nombres equipos
-    local_name = getattr(p, 'equipo_local', None).nombre if getattr(p, 'equipo_local', None) else (getattr(p, 'club_local', None).nombre if getattr(p, 'club_local', None) else 'Local')
-    visit_name = getattr(p, 'equipo_visitante', None).nombre if getattr(p, 'equipo_visitante', None) else (getattr(p, 'club_visitante', None).nombre if getattr(p, 'club_visitante', None) else 'Visitante')
+    # Nombres equipos (lookup desde MongoDB)
+    _el = mongo.db.equipos.find_one({'_id': p.equipo_local_id}) if p.equipo_local_id else None
+    _ev = mongo.db.equipos.find_one({'_id': p.equipo_visitante_id}) if p.equipo_visitante_id else None
+    _cl = mongo.db.clubes.find_one({'_id': p.club_local_id}) if p.club_local_id else None
+    _cv = mongo.db.clubes.find_one({'_id': p.club_visitante_id}) if p.club_visitante_id else None
+    local_name = _el.get('nombre') if _el else (_cl.get('nombre') if _cl else 'Local')
+    visit_name = _ev.get('nombre') if _ev else (_cv.get('nombre') if _cv else 'Visitante')
     _draw_text(c, *POS['equipos']['local'], local_name, 11, True, scale_x=scale_x, scale_y=scale_y)
     _draw_text(c, *POS['equipos']['visit'], visit_name, 11, True, scale_x=scale_x, scale_y=scale_y)
 

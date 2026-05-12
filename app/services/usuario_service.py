@@ -1,8 +1,10 @@
 from app.repositories.usuario_repositorio import UsuarioRepositorio
-from app import db
+from app.extensions import mongo
 from app.models.usuario import Usuario
 from app.models.club import Club
+from app.repositories.club_repositorio import ClubRepository
 from werkzeug.security import check_password_hash, generate_password_hash
+from bson import ObjectId
 import re
 
 class UsuarioService:
@@ -58,12 +60,13 @@ class UsuarioService:
 
         club_id = None
         if club_nombre:
-            club = Club.query.filter_by(nombre=club_nombre).first()
-            if not club:
+            doc = mongo.db.clubes.find_one({'nombre': club_nombre})
+            if not doc:
                 club = Club(nombre=club_nombre)
-                db.session.add(club)
-                db.session.commit()
-            club_id = club.id
+                ClubRepository.crear(club)
+                club_id = club._id
+            else:
+                club_id = doc['_id']
 
         usuario = Usuario(
             username=username,
@@ -73,40 +76,45 @@ class UsuarioService:
             puede_cargar_incidencias=puede_cargar_incidencias,
             puede_precargar_equipos=puede_precargar_equipos,
         )
-        db.session.add(usuario)
-        db.session.commit()
+        doc = usuario.to_dict()
+        doc.pop('_id', None)
+        result = mongo.db.usuarios.insert_one(doc)
+        usuario._id = result.inserted_id
         return usuario
 
     @staticmethod
-    def eliminar_usuario(usuario_id: int) -> bool:
-        usuario = Usuario.query.get(int(usuario_id))
-        if not usuario:
-            return False
-        db.session.delete(usuario)
-        db.session.commit()
-        return True
+    def eliminar_usuario(usuario_id) -> bool:
+        result = mongo.db.usuarios.delete_one({'_id': ObjectId(usuario_id)})
+        return result.deleted_count > 0
 
     @staticmethod
-    def actualizar_usuario_operador(usuario_id: int, payload: dict) -> Usuario:
+    def actualizar_usuario_operador(usuario_id, payload: dict) -> Usuario:
         """Actualiza username y/o contraseña de un usuario operador."""
-        usuario = Usuario.query.get(int(usuario_id))
-        if not usuario:
+        doc = mongo.db.usuarios.find_one({'_id': ObjectId(usuario_id)})
+        if not doc:
             raise ValueError('Usuario no encontrado')
+        usuario = Usuario.from_dict(doc)
 
         nuevo_username = (payload.get('username') or '').strip()
         nuevo_password = payload.get('password') or ''
 
+        update = {}
         if nuevo_username:
             existente = UsuarioRepositorio.buscar_por_username(nuevo_username)
-            if existente and existente.id != usuario.id:
+            if existente and existente._id != usuario._id:
                 raise ValueError(f"El usuario '{nuevo_username}' ya existe")
-            usuario.username = nuevo_username
+            update['username'] = nuevo_username
 
         if nuevo_password:
             ok, msg = UsuarioService.validar_password(nuevo_password)
             if not ok:
                 raise ValueError(msg or 'Contraseña inválida')
-            usuario.password = UsuarioService.hashear_password(nuevo_password)
+            update['password'] = UsuarioService.hashear_password(nuevo_password)
 
-        db.session.commit()
-        return usuario
+        if update:
+            mongo.db.usuarios.update_one(
+                {'_id': ObjectId(usuario_id)}, {'$set': update}
+            )
+
+        updated_doc = mongo.db.usuarios.find_one({'_id': ObjectId(usuario_id)})
+        return Usuario.from_dict(updated_doc)

@@ -1,21 +1,24 @@
 import csv
 from datetime import datetime
 
-from app import db
+from app.extensions import mongo
 from app.models.partido import Partido
 from app.models.club import Club
 from app.models.equipo import Equipo
+from bson import ObjectId
 
 
 def _buscar_club(nombre: str):
-    return db.session.query(Club).filter(Club.nombre == nombre).first()
+    doc = mongo.db.clubes.find_one({'nombre': nombre})
+    return Club.from_dict(doc)
 
 
 def _buscar_equipo(nombre: str, categoria: str | None = None):
-    q = db.session.query(Equipo).filter(Equipo.nombre == nombre)
+    query = {'nombre': nombre}
     if categoria:
-        q = q.filter(Equipo.categoria == categoria)
-    return q.first()
+        query['categoria'] = categoria
+    doc = mongo.db.equipos.find_one(query)
+    return Equipo.from_dict(doc)
 
 
 def cargar_partidos_desde_csv_reader(reader) -> int:
@@ -63,8 +66,20 @@ def cargar_partidos_desde_csv_reader(reader) -> int:
 
         eq_local = _buscar_equipo(local_nombre, categoria)
         eq_visit = _buscar_equipo(visit_nombre, categoria)
-        cl_local = eq_local.club if eq_local else _buscar_club(local_nombre)
-        cl_visit = eq_visit.club if eq_visit else _buscar_club(visit_nombre)
+
+        # Para equipos, resolver el club via lookup
+        cl_local = None
+        cl_visit = None
+        if eq_local and eq_local.club_id:
+            cl_local = Club.from_dict(mongo.db.clubes.find_one({'_id': ObjectId(eq_local.club_id)}))
+        if not cl_local:
+            cl_local = _buscar_club(local_nombre)
+
+        if eq_visit and eq_visit.club_id:
+            cl_visit = Club.from_dict(mongo.db.clubes.find_one({'_id': ObjectId(eq_visit.club_id)}))
+        if not cl_visit:
+            cl_visit = _buscar_club(visit_nombre)
+
         if not cl_local or not cl_visit:
             # No se encontró club local o visitante, se omite
             continue
@@ -83,15 +98,16 @@ def cargar_partidos_desde_csv_reader(reader) -> int:
             bloque=bloque or None,
             fecha_hora=fh,
             cancha=cancha or None,
-            club_local_id=cl_local.id,
-            club_visitante_id=cl_visit.id,
-            equipo_local_id=eq_local.id if eq_local else None,
-            equipo_visitante_id=eq_visit.id if eq_visit else None,
+            club_local_id=cl_local._id,
+            club_visitante_id=cl_visit._id,
+            equipo_local_id=eq_local._id if eq_local else None,
+            equipo_visitante_id=eq_visit._id if eq_visit else None,
         )
-        db.session.add(p)
+        doc = p.to_dict()
+        doc.pop('_id', None)
+        mongo.db.partidos.insert_one(doc)
         count += 1
 
-    db.session.commit()
     return count
 
 
