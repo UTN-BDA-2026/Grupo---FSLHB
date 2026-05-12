@@ -1,4 +1,3 @@
-
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -9,35 +8,43 @@ env_path = os.path.join(basedir, '.env')
 if os.path.exists(env_path):
     load_dotenv(env_path)
 
-from app import app, db
+from app import app
 from app.models.usuario import Usuario
 from app.models.club import Club
+from app.repositories.usuario_repositorio import UsuarioRepositorio
+from app.repositories.club_repositorio import ClubRepository
 from app.services.usuario_service import UsuarioService
 
 # Configura aquí los datos del nuevo usuario y club
 def crear_usuario(username, password, nombre_club):
     with app.app_context():
         # Buscar o crear el club (solo si se especifica)
-        club = None
+        club_id = None
         if nombre_club:
-            club = Club.query.filter_by(nombre=nombre_club).first()
+            club = ClubRepository.buscar_por_nombre(nombre_club)
             if not club:
                 club = Club(nombre=nombre_club)
-                db.session.add(club)
-                db.session.commit()
+                club = ClubRepository.crear(club)
+        
         # Crear usuario
-        if Usuario.query.filter_by(username=username).first():
+        if UsuarioRepositorio.buscar_por_username(username):
             print(f"El usuario '{username}' ya existe.")
             return
+        
         ok, msg = UsuarioService.validar_password(password)
         if not ok:
             print(f"ERROR: {msg}")
             return
+        
         hashed_pw = UsuarioService.hashear_password(password)
-        usuario = Usuario(username=username, password=hashed_pw, club_id=club.id if club else None, is_admin=True)
-        db.session.add(usuario)
-        db.session.commit()
-        print(f"Usuario admin '{username}' creado (id={usuario.id})")
+        usuario = Usuario(
+            username=username, 
+            password=hashed_pw, 
+            club_id=club_id,
+            is_admin=True
+        )
+        usuario = UsuarioRepositorio.crear(usuario)
+        print(f"Usuario admin '{username}' creado (id={usuario._id})")
 
 
 # Ejemplo de uso:

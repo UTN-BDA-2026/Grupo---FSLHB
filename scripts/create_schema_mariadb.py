@@ -1,3 +1,13 @@
+"""
+Script legacy para crear esquema en MariaDB.
+
+Este proyecto ahora usa MongoDB. Este script ya no es necesario.
+Las colecciones de MongoDB se crean automáticamente al insertar documentos.
+
+Para inicializar índices de MongoDB, ejecuta:
+  python scripts/setup_mongodb_indexes.py
+"""
+
 import os
 import sys
 
@@ -6,22 +16,15 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
-from app import create_app, db
+from app import create_app
 
 
 def main() -> int:
-    uri = os.environ.get("PROD_DATABASE_URI")
-    if not uri:
-        print("PROD_DATABASE_URI env var is required (point it to MariaDB).", file=sys.stderr)
-        return 1
-
     app = create_app("production")
     with app.app_context():
-        # Ensure models are imported so tables are registered
-        import app.models  # noqa: F401
-
-        db.create_all()
-        print("Schema created/verified using db.create_all().")
+        print("✓ Proyecto usando MongoDB")
+        print("  Colecciones se crean automáticamente")
+        print("  Para índices: python scripts/setup_mongodb_indexes.py")
     return 0
 
 

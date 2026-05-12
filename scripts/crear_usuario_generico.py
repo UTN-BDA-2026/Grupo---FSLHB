@@ -1,9 +1,8 @@
 """
-Crear un usuario en la tabla `usuarios` asociado (opcionalmente) a un club existente.
+Crear un usuario en MongoDB asociado (opcionalmente) a un club existente.
 
 Uso (PowerShell en Windows):
 
-  $env:DATABASE_URL = "postgresql://hockeyuser:hockeypass@localhost:5433/hockey"; \
   python scripts/crear_usuario_generico.py --username CuadroNacional.sr --password 123456 --club "Cuadro Nacional"
 
 Notas:
@@ -12,9 +11,11 @@ Notas:
 """
 
 import argparse
-from app import app, db
+from app import app
 from app.models.usuario import Usuario
 from app.models.club import Club
+from app.repositories.usuario_repositorio import UsuarioRepositorio
+from app.repositories.club_repositorio import ClubRepository
 from app.services.usuario_service import UsuarioService
 
 
@@ -31,16 +32,15 @@ def crear_usuario(username: str, password: str, club_nombre: str | None = None,
         # Si se especifica club, buscarlo o crearlo
         club_id = None
         if club_nombre:
-            club = Club.query.filter_by(nombre=club_nombre).first()
+            club = ClubRepository.buscar_por_nombre(club_nombre)
             if not club:
                 club = Club(nombre=club_nombre)
-                db.session.add(club)
-                db.session.commit()
-                print(f"Club creado: {club.nombre} (id={club.id})")
-            club_id = club.id
+                club = ClubRepository.crear(club)
+                print(f"Club creado: {club.nombre} (id={club._id})")
+            club_id = club._id
 
         # Evitar duplicados
-        if Usuario.query.filter_by(username=username).first():
+        if UsuarioRepositorio.buscar_por_username(username):
             print(f"El usuario '{username}' ya existe.")
             return
 
@@ -57,10 +57,9 @@ def crear_usuario(username: str, password: str, club_nombre: str | None = None,
             puede_cargar_incidencias=puede_cargar_incidencias,
             puede_precargar_equipos=puede_precargar_equipos,
         )
-        db.session.add(usuario)
-        db.session.commit()
+        usuario = UsuarioRepositorio.crear(usuario)
         print(
-            f"Usuario '{username}' creado (id={usuario.id})"
+            f"Usuario '{username}' creado (id={usuario._id})"
             + (f" para el club '{club_nombre}' (id={club_id})" if club_id else " sin club")
         )
 
@@ -87,61 +86,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-from app import app, db
-from app.models.usuario import Usuario
-from app.models.club import Club
-from sqlalchemy.exc import IntegrityError
-from werkzeug.security import generate_password_hash
-
-# Script para crear usuarios genéricos (sin club)
-def crear_usuario_generico(username, password):
-    with app.app_context():
-        # Verificar si el usuario ya existe
-        if Usuario.query.filter_by(username=username).first():
-            print(f"El usuario '{username}' ya existe.")
-            return
-        ok, msg = UsuarioService.validar_password(password)
-        if not ok:
-            print(f"ERROR: {msg}")
-            return
-        hashed_pw = UsuarioService.hashear_password(password)
-        usuario = Usuario(
-            username=username,
-            password=hashed_pw,
-            club_id=None,
-            is_operador=True,
-            puede_cargar_incidencias=True,
-            puede_precargar_equipos=True,
-        )
-        db.session.add(usuario)
-        try:
-            db.session.commit()
-            print(f"Usuario genérico '{username}' creado correctamente (sin club).")
-        except IntegrityError as e:
-            db.session.rollback()
-            # Fallback: si la columna club_id es NOT NULL, usar club 'Operadores'
-            operadores = Club.query.filter_by(nombre='Operadores').first()
-            if not operadores:
-                operadores = Club(nombre='Operadores')
-                db.session.add(operadores)
-                db.session.commit()
-                print("Creado club virtual 'Operadores' para usuarios sin club.")
-            usuario = Usuario(
-                username=username,
-                password=hashed_pw,
-                club_id=operadores.id,
-                is_operador=True,
-                puede_cargar_incidencias=True,
-                puede_precargar_equipos=True,
-            )
-            db.session.add(usuario)
-            db.session.commit()
-            print(f"Usuario '{username}' creado asociado al club virtual 'Operadores' (restricción NOT NULL en BD).")
-
-# Ejemplo de uso:
-# crear_usuario_generico('admin', 'admin123')
-
-if __name__ == '__main__':
-    pass
-    # Crear usuario genérico de ejemplo (comentado para evitar duplicados)
-    # crear_usuario_generico('Patricia.sr', 'Patricia_Sanra_2')

@@ -33,3 +33,24 @@ class UsuarioRepositorio:
             ]
         })
         return [Usuario.from_dict(d) for d in docs]
+
+    @staticmethod
+    def crear(usuario):
+        """Crea un nuevo usuario en MongoDB."""
+        doc = usuario.to_dict()
+        doc.pop('_id', None)
+        result = UsuarioRepositorio._col().insert_one(doc)
+        usuario._id = result.inserted_id
+        return usuario
+
+    @staticmethod
+    def actualizar(usuario):
+        """Actualiza un usuario existente en MongoDB."""
+        doc = usuario.to_dict()
+        doc.pop('_id', None)
+        result = UsuarioRepositorio._col().update_one(
+            {'_id': ObjectId(usuario._id)}, {'$set': doc}
+        )
+        if result.matched_count == 0:
+            return None
+        return usuario

@@ -38,3 +38,21 @@ class NoticiaRepositorio:
     def eliminar_noticia(noticia_id):
         result = NoticiaRepositorio._col().delete_one({'_id': ObjectId(noticia_id)})
         return result.deleted_count > 0
+
+    @staticmethod
+    def actualizar_noticia(noticia):
+        """Actualiza una noticia existente en MongoDB."""
+        doc = noticia.to_dict()
+        doc.pop('_id', None)
+        result = NoticiaRepositorio._col().update_one(
+            {'_id': ObjectId(noticia._id)}, {'$set': doc}
+        )
+        if result.matched_count == 0:
+            return None
+        return noticia
+
+    @staticmethod
+    def obtener_por_titulo(titulo):
+        """Obtiene una noticia por título."""
+        doc = NoticiaRepositorio._col().find_one({'titulo': titulo})
+        return Noticia.from_dict(doc)

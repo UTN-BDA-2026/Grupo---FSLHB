@@ -54,3 +54,9 @@ class ClubRepository:
             return None
         ClubRepository._col().delete_one({'_id': ObjectId(id)})
         return club
+
+    @staticmethod
+    def buscar_por_nombre(nombre):
+        """Busca un club por nombre."""
+        doc = ClubRepository._col().find_one({'nombre': nombre})
+        return Club.from_dict(doc)
