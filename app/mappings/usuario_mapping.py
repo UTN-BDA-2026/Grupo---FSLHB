@@ -1,8 +1,8 @@
-from app.models.usuario import Usuario
 from marshmallow import Schema, fields
 
+
 class UsuarioSchema(Schema):
-    id = fields.Int(dump_only=True)
+    id = fields.Str(dump_only=True, attribute='_id')
     username = fields.Str(required=True)
     club = fields.Nested(lambda: ClubSchema(only=("id", "nombre")), dump_only=True)
     is_admin = fields.Bool(dump_only=True)
@@ -12,5 +12,5 @@ class UsuarioSchema(Schema):
 
 
 class ClubSchema(Schema):
-    id = fields.Int()
+    id = fields.Str(attribute='_id')
     nombre = fields.Str()

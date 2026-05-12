@@ -1,9 +1,8 @@
-from marshmallow import Schema, fields, post_load, validate
-from app.models import Club
+from marshmallow import Schema, fields, validate
 
 
 class ClubMapping(Schema):
-    id = fields.Int(dump_only=True)
+    id = fields.Str(dump_only=True, attribute='_id')
     nombre = fields.Str(required=True, validate=validate.Length(min=2, max=100))
     razon_social = fields.Str(allow_none=True)
     contacto = fields.Str(allow_none=True)
@@ -12,8 +11,4 @@ class ClubMapping(Schema):
     domicilio = fields.Str(allow_none=True)
     telefono = fields.Str(allow_none=True)
     web = fields.Str(allow_none=True)
-    arbitro_id = fields.Int(allow_none=True)
-
-    @post_load
-    def crear_club(self, data, **kwargs):
-        return Club(**data)
+    arbitro_id = fields.Str(allow_none=True)
