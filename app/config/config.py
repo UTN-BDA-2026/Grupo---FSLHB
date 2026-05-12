@@ -8,8 +8,6 @@ load_dotenv(dotenv_path=env_path)
 
 class Config(object):
     TESTING = False
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_RECORD_QUERIES = True
     HASHIDS_MIN_LENGTH: str = os.environ.get('HASHIDS_MIN_LENGTH') or '8'
     HASHIDS_ALPHABET: str = os.environ.get('HASHIDS_ALPHABET') or os.environ.get('ALFABETO') or 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
     HASHIDS_SALT: str = os.environ.get('HASHIDS_SALT') or 'default_salt'
@@ -22,20 +20,17 @@ class Config(object):
 class TestConfig(Config):
     TESTING = True
     DEBUG = True
-    SQLALCHEMY_TRACK_MODIFICATIONS = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URI') or 'sqlite:///:memory:'
+    MONGO_URI = os.environ.get('MONGO_URI') or 'mongodb://localhost:27017/hockey_test'
 
 class DevelopmentConfig(Config):
     TESTING = True
     DEBUG = True
-    SQLALCHEMY_TRACK_MODIFICATIONS = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URI') or 'sqlite:///dev.db'
+    MONGO_URI = os.environ.get('MONGO_URI') or 'mongodb://localhost:27017/hockey_dev'
 
 class ProductionConfig(Config):
     DEBUG = False
     TESTING = False
-    SQLALCHEMY_RECORD_QUERIES = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get('PROD_DATABASE_URI')
+    MONGO_URI = os.environ.get('MONGO_URI') or 'mongodb://localhost:27017/hockey'
 
     @classmethod
     def init_app(cls, app):
