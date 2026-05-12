@@ -1,86 +1,96 @@
-from app import db
+from bson import ObjectId
+from app.extensions import mongo
 from app.models.incidencia import Incidencia
+
 
 class IncidenciaRepository:
     @staticmethod
-    def crear(inc: Incidencia):
-        db.session.add(inc)
-        db.session.commit()
+    def _col():
+        return mongo.db.incidencias
+
+    @staticmethod
+    def crear(inc):
+        doc = inc.to_dict()
+        doc.pop('_id', None)
+        result = IncidenciaRepository._col().insert_one(doc)
+        inc._id = result.inserted_id
         return inc
 
     @staticmethod
-    def listar_por_partido(partido_id: int):
-        return db.session.query(Incidencia).filter_by(partido_id=partido_id).order_by(Incidencia.created_at.asc()).all()
+    def listar_por_partido(partido_id):
+        docs = IncidenciaRepository._col().find(
+            {'partido_id': ObjectId(partido_id)}
+        ).sort('created_at', 1)
+        return [Incidencia.from_dict(d) for d in docs]
 
     @staticmethod
-    def listar_goles_por_partidos(partido_ids: list[int]):
+    def listar_goles_por_partidos(partido_ids):
         if not partido_ids:
             return []
-        return (
-            db.session.query(Incidencia)
-            .filter(Incidencia.partido_id.in_(partido_ids), Incidencia.tipo == 'gol')
-            .all()
+        oids = [ObjectId(pid) for pid in partido_ids]
+        docs = IncidenciaRepository._col().find(
+            {'partido_id': {'$in': oids}, 'tipo': 'gol'}
         )
+        return [Incidencia.from_dict(d) for d in docs]
 
     @staticmethod
-    def max_created_at_por_partido(partido_ids: list[int]):
-        """Devuelve dict {partido_id: max_created_at} para un conjunto de partidos."""
+    def max_created_at_por_partido(partido_ids):
         if not partido_ids:
             return {}
-        from sqlalchemy import func
-        rows = (
-            db.session.query(Incidencia.partido_id, func.max(Incidencia.created_at))
-            .filter(Incidencia.partido_id.in_(partido_ids))
-            .group_by(Incidencia.partido_id)
-            .all()
-        )
-        return {pid: max_dt for pid, max_dt in rows}
+        oids = [ObjectId(pid) for pid in partido_ids]
+        pipeline = [
+            {'$match': {'partido_id': {'$in': oids}}},
+            {'$group': {'_id': '$partido_id', 'max_dt': {'$max': '$created_at'}}}
+        ]
+        rows = IncidenciaRepository._col().aggregate(pipeline)
+        return {r['_id']: r['max_dt'] for r in rows}
 
     @staticmethod
-    def ranking_resumen(torneo: str | None, categoria: str | None, fecha_hasta: int | None = None):
-        """Devuelve incidencias (gol y tarjetas) de partidos filtrados.
-        Retorna lista de objetos Incidencia para simplificar el consumo aguas arriba."""
-        from app.models.partido import Partido  # import local para evitar ciclos
-        q = db.session.query(Incidencia).join(Partido, Partido.id == Incidencia.partido_id)
+    def ranking_resumen(torneo=None, categoria=None, fecha_hasta=None):
+        # First get matching partido IDs
+        partido_query = {}
         if torneo:
-            # Coincidencia exacta por nombre de torneo
-            q = q.filter(Partido.torneo == torneo)
+            partido_query['torneo'] = torneo
         if categoria:
-            # Coincidencia exacta por categoría
-            q = q.filter(Partido.categoria == categoria)
+            partido_query['categoria'] = categoria
         if fecha_hasta is not None:
             try:
                 fh = int(fecha_hasta)
-                q = q.filter((Partido.fecha_numero == None) | (Partido.fecha_numero <= fh))
+                partido_query['$or'] = [
+                    {'fecha_numero': None},
+                    {'fecha_numero': {'$lte': fh}}
+                ]
             except Exception:
                 pass
-        return q.all()
 
-    @staticmethod
-    def eliminar(partido_id: int, incidencia_id: int) -> bool:
-        """Elimina una incidencia por id verificando que pertenezca al partido indicado.
-        Devuelve True si se eliminó, False si no se encontró."""
-        inc = db.session.query(Incidencia).filter_by(id=incidencia_id, partido_id=partido_id).first()
-        if not inc:
-            return False
-        db.session.delete(inc)
-        db.session.commit()
-        return True
-
-    @staticmethod
-    def listar_tarjetas_por_jugadora(jugadora_id: int):
-        return (
-            db.session.query(Incidencia)
-            .filter_by(jugadora_id=jugadora_id, tipo='tarjeta')
-            .order_by(Incidencia.created_at.asc())
-            .all()
+        from app.extensions import mongo as _mongo
+        partido_ids = [
+            d['_id'] for d in _mongo.db.partidos.find(partido_query, {'_id': 1})
+        ]
+        if not partido_ids:
+            return []
+        docs = IncidenciaRepository._col().find(
+            {'partido_id': {'$in': partido_ids}}
         )
+        return [Incidencia.from_dict(d) for d in docs]
 
     @staticmethod
-    def eliminar_por_id(incidencia_id: int) -> bool:
-        inc = db.session.query(Incidencia).filter_by(id=incidencia_id).first()
-        if not inc:
-            return False
-        db.session.delete(inc)
-        db.session.commit()
-        return True
+    def eliminar(partido_id, incidencia_id):
+        result = IncidenciaRepository._col().delete_one(
+            {'_id': ObjectId(incidencia_id), 'partido_id': ObjectId(partido_id)}
+        )
+        return result.deleted_count > 0
+
+    @staticmethod
+    def listar_tarjetas_por_jugadora(jugadora_id):
+        docs = IncidenciaRepository._col().find(
+            {'jugadora_id': ObjectId(jugadora_id), 'tipo': 'tarjeta'}
+        ).sort('created_at', 1)
+        return [Incidencia.from_dict(d) for d in docs]
+
+    @staticmethod
+    def eliminar_por_id(incidencia_id):
+        result = IncidenciaRepository._col().delete_one(
+            {'_id': ObjectId(incidencia_id)}
+        )
+        return result.deleted_count > 0

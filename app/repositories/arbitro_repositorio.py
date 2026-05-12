@@ -1,40 +1,49 @@
-from app import db
+from bson import ObjectId
+from app.extensions import mongo
 from app.models.arbitro import Arbitro
 
 
 class ArbitroRepositorio:
     @staticmethod
-    def crear(data: dict) -> Arbitro:
+    def _col():
+        return mongo.db.arbitros
+
+    @staticmethod
+    def crear(data: dict):
         arb = Arbitro(**data)
-        db.session.add(arb)
-        db.session.commit()
+        doc = arb.to_dict()
+        doc.pop('_id', None)
+        result = ArbitroRepositorio._col().insert_one(doc)
+        arb._id = result.inserted_id
         return arb
 
     @staticmethod
-    def obtener(id: int) -> Arbitro | None:
-        return Arbitro.query.get(id)
+    def obtener(id):
+        doc = ArbitroRepositorio._col().find_one({'_id': ObjectId(id)})
+        return Arbitro.from_dict(doc)
 
     @staticmethod
-    def listar() -> list[Arbitro]:
-        return Arbitro.query.order_by(Arbitro.apellido, Arbitro.nombre).all()
+    def listar():
+        docs = ArbitroRepositorio._col().find().sort([('apellido', 1), ('nombre', 1)])
+        return [Arbitro.from_dict(d) for d in docs]
 
     @staticmethod
-    def eliminar(id: int) -> bool:
-        arb = Arbitro.query.get(id)
-        if not arb:
-            return False
-        db.session.delete(arb)
-        db.session.commit()
-        return True
+    def eliminar(id) -> bool:
+        result = ArbitroRepositorio._col().delete_one({'_id': ObjectId(id)})
+        return result.deleted_count > 0
 
     @staticmethod
-    def actualizar(id: int, nombre: str | None = None, apellido: str | None = None) -> Arbitro | None:
-        arb = Arbitro.query.get(id)
-        if not arb:
-            return None
+    def actualizar(id, nombre=None, apellido=None):
+        update = {}
         if nombre is not None:
-            arb.nombre = nombre
+            update['nombre'] = nombre
         if apellido is not None:
-            arb.apellido = apellido
-        db.session.commit()
-        return arb
+            update['apellido'] = apellido
+        if not update:
+            return ArbitroRepositorio.obtener(id)
+        result = ArbitroRepositorio._col().update_one(
+            {'_id': ObjectId(id)}, {'$set': update}
+        )
+        if result.matched_count == 0:
+            return None
+        return ArbitroRepositorio.obtener(id)

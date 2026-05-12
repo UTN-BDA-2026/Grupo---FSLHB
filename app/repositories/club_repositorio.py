@@ -1,42 +1,56 @@
-from app import db
-from app.models import Club
+from bson import ObjectId
+from app.extensions import mongo
+from app.models.club import Club
+
 
 class ClubRepository:
     @staticmethod
-    def crear(club):
-        db.session.add(club)
-        db.session.commit()
-    
+    def _col():
+        return mongo.db.clubes
+
     @staticmethod
-    def buscar_por_id(id:int):
-        return db.session.query(Club).filter_by(id=id).first()
+    def crear(club):
+        doc = club.to_dict()
+        doc.pop('_id', None)
+        result = ClubRepository._col().insert_one(doc)
+        club._id = result.inserted_id
+        return club
+
+    @staticmethod
+    def buscar_por_id(id):
+        doc = ClubRepository._col().find_one({'_id': ObjectId(id)})
+        return Club.from_dict(doc)
 
     @staticmethod
     def buscar_todos():
-        return db.session.query(Club).all()
+        docs = ClubRepository._col().find()
+        return [Club.from_dict(d) for d in docs]
 
     @staticmethod
     def actualizar_club(club):
-        club_existente = db.session.merge(club)
-        if not club_existente:
+        doc = club.to_dict()
+        doc.pop('_id', None)
+        result = ClubRepository._col().update_one(
+            {'_id': ObjectId(club._id)}, {'$set': doc}
+        )
+        if result.matched_count == 0:
             return None
-        db.session.commit()
-        return club_existente
+        return club
 
     @staticmethod
-    def asignar_arbitro(club_id: int, arbitro_id: int):
-        club = db.session.query(Club).filter_by(id=club_id).first()
-        if not club:
+    def asignar_arbitro(club_id, arbitro_id):
+        result = ClubRepository._col().update_one(
+            {'_id': ObjectId(club_id)},
+            {'$set': {'arbitro_id': arbitro_id}}
+        )
+        if result.matched_count == 0:
             return None
-        club.arbitro_id = arbitro_id
-        db.session.commit()
-        return club
-    
+        return ClubRepository.buscar_por_id(club_id)
+
     @staticmethod
-    def borrar_por_id(id:int):
-        club = db.session.query(Club).filter_by(id=id).first()
+    def borrar_por_id(id):
+        club = ClubRepository.buscar_por_id(id)
         if not club:
             return None
-        db.session.delete(club)
-        db.session.commit()
+        ClubRepository._col().delete_one({'_id': ObjectId(id)})
         return club

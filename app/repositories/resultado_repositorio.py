@@ -1,26 +1,39 @@
-from app import db
-from app.models import Resultado
+from bson import ObjectId
+from app.extensions import mongo
+from app.models.resultado import Resultado
+
 
 class ResultadoRepository:
+    @staticmethod
+    def _col():
+        return mongo.db.resultados
 
     @staticmethod
-    def agregar_resultado(resultado: Resultado):
-        db.session.add(resultado)
-        db.session.commit()
+    def agregar_resultado(resultado):
+        doc = resultado.to_dict()
+        doc.pop('_id', None)
+        result = ResultadoRepository._col().insert_one(doc)
+        resultado._id = result.inserted_id
+        return resultado
 
     @staticmethod
     def obtener_resultados():
-        return Resultado.query.all()
+        docs = ResultadoRepository._col().find()
+        return [Resultado.from_dict(d) for d in docs]
 
     @staticmethod
-    def obtener_resultado_por_id(resultado_id: int):
-        return Resultado.query.get(resultado_id)
+    def obtener_resultado_por_id(resultado_id):
+        doc = ResultadoRepository._col().find_one({'_id': ObjectId(resultado_id)})
+        return Resultado.from_dict(doc)
 
     @staticmethod
-    def actualizar_resultado(resultado: Resultado):
-        db.session.commit()
+    def actualizar_resultado(resultado):
+        doc = resultado.to_dict()
+        doc.pop('_id', None)
+        ResultadoRepository._col().update_one(
+            {'_id': ObjectId(resultado._id)}, {'$set': doc}
+        )
 
     @staticmethod
-    def eliminar_resultado(resultado: Resultado):
-        db.session.delete(resultado)
-        db.session.commit()
+    def eliminar_resultado(resultado):
+        ResultadoRepository._col().delete_one({'_id': ObjectId(resultado._id)})

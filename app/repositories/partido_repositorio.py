@@ -1,53 +1,67 @@
-from app import db
-from sqlalchemy import func
+import re
+from bson import ObjectId
+from app.extensions import mongo
 from app.models.partido import Partido
+
 
 class PartidoRepository:
     @staticmethod
-    def puede_agregar_fecha(torneo_nombre: str, max_fechas: int) -> bool:
-        # Cuenta la cantidad de fechas distintas ya jugadas en el torneo
-        fechas_jugadas = db.session.query(Partido.fecha_numero).filter_by(torneo=torneo_nombre).distinct().count()
-        return fechas_jugadas < max_fechas
+    def _col():
+        return mongo.db.partidos
+
     @staticmethod
-    def crear(partido: Partido):
-        db.session.add(partido)
-        db.session.commit()
+    def puede_agregar_fecha(torneo_nombre: str, max_fechas: int) -> bool:
+        pipeline = [
+            {'$match': {'torneo': torneo_nombre}},
+            {'$group': {'_id': '$fecha_numero'}},
+            {'$count': 'total'}
+        ]
+        result = list(PartidoRepository._col().aggregate(pipeline))
+        fechas_jugadas = result[0]['total'] if result else 0
+        return fechas_jugadas < max_fechas
+
+    @staticmethod
+    def crear(partido):
+        doc = partido.to_dict()
+        doc.pop('_id', None)
+        result = PartidoRepository._col().insert_one(doc)
+        partido._id = result.inserted_id
         return partido
 
     @staticmethod
-    def buscar_por_id(id: int):
-        return db.session.query(Partido).filter_by(id=id).first()
+    def buscar_por_id(id):
+        doc = PartidoRepository._col().find_one({'_id': ObjectId(id)})
+        return Partido.from_dict(doc)
 
     @staticmethod
     def buscar(filtros: dict):
-        q = db.session.query(Partido)
+        query = {}
         if filtros.get('torneo'):
-            # Emparejar por substring y sin sensibilidad a mayúsculas
-            q = q.filter(Partido.torneo.ilike(f"%{filtros['torneo']}%"))
+            query['torneo'] = {'$regex': re.escape(filtros['torneo']), '$options': 'i'}
         if filtros.get('categoria'):
-            # Emparejar por substring y sin sensibilidad a mayúsculas
-            q = q.filter(Partido.categoria.ilike(f"%{filtros['categoria']}%"))
+            query['categoria'] = {'$regex': re.escape(filtros['categoria']), '$options': 'i'}
         if filtros.get('club_id'):
             cid = filtros['club_id']
-            # Buscar partidos donde el club sea local o visitante
-            q = q.filter((Partido.club_local_id == cid) | (Partido.club_visitante_id == cid))
+            query['$or'] = [{'club_local_id': cid}, {'club_visitante_id': cid}]
         if filtros.get('fecha_numero'):
-            q = q.filter(Partido.fecha_numero == filtros['fecha_numero'])
-        # Filtros de estado (opcional)
+            query['fecha_numero'] = filtros['fecha_numero']
         if filtros.get('estado'):
-            q = q.filter(func.lower(Partido.estado) == filtros['estado'].lower())
+            query['estado'] = {'$regex': f'^{re.escape(filtros["estado"])}$', '$options': 'i'}
         if filtros.get('estado_not'):
-            q = q.filter(Partido.estado != filtros['estado_not'])
-        # MariaDB/MySQL no soporta `NULLS LAST`; se emula ordenando primero por "no es NULL"
-        return q.order_by(Partido.fecha_hora.is_(None), Partido.fecha_hora).all()
+            query['estado'] = {'$ne': filtros['estado_not']}
+
+        docs = PartidoRepository._col().find(query).sort('fecha_hora', 1)
+        return [Partido.from_dict(d) for d in docs]
 
     @staticmethod
-    def actualizar(partido: Partido):
-        db.session.merge(partido)
-        db.session.commit()
+    def actualizar(partido):
+        doc = partido.to_dict()
+        doc.pop('_id', None)
+        PartidoRepository._col().update_one(
+            {'_id': ObjectId(partido._id)}, {'$set': doc}
+        )
         return partido
 
     @staticmethod
-    def eliminar(partido: Partido):
-        db.session.delete(partido)
-        db.session.commit()
+    def eliminar(partido):
+        PartidoRepository._col().delete_one({'_id': ObjectId(partido._id)})

@@ -1,49 +1,47 @@
+from bson import ObjectId
+from app.extensions import mongo
 from app.models.torneo import Torneo
-from app import db
 
 
 class TorneoRepository:
     @staticmethod
+    def _col():
+        return mongo.db.torneos
+
+    @staticmethod
     def agregar_torneo(nombre, max_fechas):
-        nuevo_torneo = Torneo(nombre=nombre, max_fechas=max_fechas)
-        db.session.add(nuevo_torneo)
-        db.session.commit()
+        doc = {'nombre': nombre, 'max_fechas': max_fechas}
+        result = TorneoRepository._col().insert_one(doc)
         return {
             "mensaje": "Torneo agregado",
-            "id": nuevo_torneo.id,
-            "nombre": nuevo_torneo.nombre,
-            "max_fechas": nuevo_torneo.max_fechas,
+            "id": str(result.inserted_id),
+            "nombre": nombre,
+            "max_fechas": max_fechas,
         }
 
     @staticmethod
     def obtener_torneos():
-        torneos = Torneo.query.order_by(Torneo.id.asc()).all()
+        docs = TorneoRepository._col().find().sort('_id', 1)
         return [
-            {"id": t.id, "nombre": t.nombre, "max_fechas": t.max_fechas}
-            for t in torneos
+            {"id": str(t['_id']), "nombre": t['nombre'], "max_fechas": t['max_fechas']}
+            for t in docs
         ]
 
     @staticmethod
-    def actualizar_torneo(torneo_id: int, nombre: str, max_fechas: int):
-        torneo = Torneo.query.get(torneo_id)
-        if not torneo:
+    def actualizar_torneo(torneo_id, nombre, max_fechas):
+        result = TorneoRepository._col().update_one(
+            {'_id': ObjectId(torneo_id)},
+            {'$set': {'nombre': nombre, 'max_fechas': max_fechas}}
+        )
+        if result.matched_count == 0:
             return None
-        torneo.nombre = nombre
-        torneo.max_fechas = max_fechas
-        db.session.commit()
-        return {"id": torneo.id, "nombre": torneo.nombre, "max_fechas": torneo.max_fechas}
+        return {"id": str(torneo_id), "nombre": nombre, "max_fechas": max_fechas}
 
     @staticmethod
-    def eliminar_torneo(torneo_id: int) -> bool:
-        torneo = Torneo.query.get(torneo_id)
-        if not torneo:
-            return False
-        db.session.delete(torneo)
-        db.session.commit()
-        return True
+    def eliminar_torneo(torneo_id) -> bool:
+        result = TorneoRepository._col().delete_one({'_id': ObjectId(torneo_id)})
+        return result.deleted_count > 0
 
     @staticmethod
     def guardar_seleccion(data):
-        # Aquí podrías guardar la selección en la base de datos si corresponde
-        # Por ahora solo retorna el dato recibido
         return {"mensaje": "Selección guardada", "data": data}

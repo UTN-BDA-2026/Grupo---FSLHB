@@ -1,30 +1,42 @@
-from app import db
+from bson import ObjectId
+from app.extensions import mongo
 from app.models.cuerpo_tecnico_partido import CuerpoTecnicoPartido
-from sqlalchemy.exc import ProgrammingError, OperationalError
 
 
 class CuerpoTecnicoPartidoRepositorio:
     @staticmethod
-    def upsert(partido_id: int, club_id: int, rol: str, cuerpo_tecnico_id: int):
-        row = CuerpoTecnicoPartido.query.filter_by(partido_id=partido_id, club_id=club_id, rol=rol).first()
-        if row:
-            row.cuerpo_tecnico_id = cuerpo_tecnico_id
-        else:
-            row = CuerpoTecnicoPartido(
-                partido_id=partido_id,
-                club_id=club_id,
-                rol=rol,
-                cuerpo_tecnico_id=cuerpo_tecnico_id,
-            )
-            db.session.add(row)
-        db.session.commit()
-        return row
+    def _col():
+        return mongo.db.cuerpo_tecnico_partido
 
     @staticmethod
-    def listar_por_partido(partido_id: int):
-        try:
-            return CuerpoTecnicoPartido.query.filter_by(partido_id=partido_id).all()
-        except (ProgrammingError, OperationalError):
-            # Tabla aún no creada (falta migración): devolver vacío para evitar 500
-            db.session.rollback()
-            return []
+    def upsert(partido_id, club_id, rol, cuerpo_tecnico_id):
+        pid = ObjectId(partido_id)
+        cid = ObjectId(club_id)
+        ct_id = ObjectId(cuerpo_tecnico_id)
+
+        existente = CuerpoTecnicoPartidoRepositorio._col().find_one(
+            {'partido_id': pid, 'club_id': cid, 'rol': rol}
+        )
+        if existente:
+            CuerpoTecnicoPartidoRepositorio._col().update_one(
+                {'_id': existente['_id']},
+                {'$set': {'cuerpo_tecnico_id': ct_id}}
+            )
+            doc = CuerpoTecnicoPartidoRepositorio._col().find_one({'_id': existente['_id']})
+        else:
+            new_doc = {
+                'partido_id': pid,
+                'club_id': cid,
+                'rol': rol,
+                'cuerpo_tecnico_id': ct_id,
+            }
+            result = CuerpoTecnicoPartidoRepositorio._col().insert_one(new_doc)
+            doc = CuerpoTecnicoPartidoRepositorio._col().find_one({'_id': result.inserted_id})
+        return CuerpoTecnicoPartido.from_dict(doc)
+
+    @staticmethod
+    def listar_por_partido(partido_id):
+        docs = CuerpoTecnicoPartidoRepositorio._col().find(
+            {'partido_id': ObjectId(partido_id)}
+        )
+        return [CuerpoTecnicoPartido.from_dict(d) for d in docs]
