@@ -1,17 +1,44 @@
-from dataclasses import dataclass
+"""Modelo PrecargaJugadora - Documento MongoDB."""
 from datetime import datetime
-from app import db
 
-@dataclass(init=False, repr=True, eq=True)
-class PrecargaJugadora(db.Model):
-    __tablename__ = "PrecargaJugadoras"
 
-    id = db.Column(db.Integer, primary_key=True)
-    partido_id = db.Column(db.Integer, db.ForeignKey('Partidos.id'), nullable=False)
-    club_id = db.Column(db.Integer, db.ForeignKey('Clubes.id'), nullable=False)
-    jugadora_id = db.Column(db.Integer, db.ForeignKey('Jugadoras.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+class PrecargaJugadora:
+    COLLECTION = 'precarga_jugadoras'
 
-    __table_args__ = (
-        db.UniqueConstraint('partido_id', 'club_id', 'jugadora_id', name='uq_precarga_partido_club_jugadora'),
-    )
+    def __init__(self, partido_id, club_id, jugadora_id, created_at=None, _id=None):
+        self._id = _id
+        self.partido_id = partido_id
+        self.club_id = club_id
+        self.jugadora_id = jugadora_id
+        self.created_at = created_at or datetime.utcnow()
+
+    @property
+    def id(self):
+        return self._id
+
+    @id.setter
+    def id(self, value):
+        self._id = value
+
+    def to_dict(self):
+        d = {
+            'partido_id': self.partido_id,
+            'club_id': self.club_id,
+            'jugadora_id': self.jugadora_id,
+            'created_at': self.created_at,
+        }
+        if self._id is not None:
+            d['_id'] = self._id
+        return d
+
+    @classmethod
+    def from_dict(cls, data):
+        if data is None:
+            return None
+        return cls(
+            _id=data.get('_id'),
+            partido_id=data.get('partido_id'),
+            club_id=data.get('club_id'),
+            jugadora_id=data.get('jugadora_id'),
+            created_at=data.get('created_at'),
+        )

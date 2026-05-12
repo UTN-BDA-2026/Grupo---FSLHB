@@ -1,17 +1,46 @@
-from app import db
+"""Modelo ArbitroPartido - Documento MongoDB."""
 
 
-class ArbitroPartido(db.Model):
-    __tablename__ = 'arbitro_partido'
+class ArbitroPartido:
+    COLLECTION = 'arbitro_partido'
 
-    id = db.Column(db.Integer, primary_key=True)
-    partido_id = db.Column(db.Integer, db.ForeignKey('Partidos.id'), nullable=False)
-    club_id = db.Column(db.Integer, db.ForeignKey('Clubes.id'), nullable=True)  # árbitro asignado para un equipo del partido
-    arbitro_id = db.Column(db.Integer, db.ForeignKey('arbitros.id'), nullable=False)
-    rol = db.Column(db.String(32), nullable=True)  # opcional: 'principal', 'asistente', etc.
+    def __init__(self, partido_id, arbitro_id, club_id=None, rol=None, _id=None):
+        self._id = _id
+        self.partido_id = partido_id
+        self.club_id = club_id
+        self.arbitro_id = arbitro_id
+        self.rol = rol  # 'principal', 'asistente', etc.
 
-    __table_args__ = (
-        db.UniqueConstraint('partido_id', 'club_id', name='uq_arbitro_partido_equipo'),
-    )
+    @property
+    def id(self):
+        return self._id
 
-    arbitro = db.relationship('Arbitro', backref='designaciones')
+    @id.setter
+    def id(self, value):
+        self._id = value
+
+    def to_dict(self):
+        d = {
+            'partido_id': self.partido_id,
+            'club_id': self.club_id,
+            'arbitro_id': self.arbitro_id,
+            'rol': self.rol,
+        }
+        if self._id is not None:
+            d['_id'] = self._id
+        return d
+
+    @classmethod
+    def from_dict(cls, data):
+        if data is None:
+            return None
+        return cls(
+            _id=data.get('_id'),
+            partido_id=data.get('partido_id'),
+            club_id=data.get('club_id'),
+            arbitro_id=data.get('arbitro_id'),
+            rol=data.get('rol'),
+        )
+
+    def __repr__(self):
+        return f'<ArbitroPartido partido={self.partido_id} arbitro={self.arbitro_id}>'

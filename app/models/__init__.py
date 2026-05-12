@@ -8,3 +8,8 @@ from .cuerpo_tecnico import CuerpoTecnico
 from .cuerpo_tecnico_partido import CuerpoTecnicoPartido
 from .arbitro import Arbitro
 from .arbitro_partido import ArbitroPartido
+from .equipo import Equipo
+from .torneo import Torneo
+from .noticia import Noticia
+from .precarga import PrecargaJugadora
+from .partido import Partido
