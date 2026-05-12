@@ -1,7 +1,7 @@
 # Grupo---FSLHB
 Integrantes 
 Caceres Franco
-Cardoso Leandro
+Cardozo Leandro
 Carrieri Bruno
 Garcia Santiago
 Peñalbe Hernan 
@@ -23,9 +23,8 @@ El objetivo es centralizar toda la información relevante y facilitar la gestió
 - **Lenguaje principal:** Python 3.11
 - **Framework web:** Flask
 - **Servidor de aplicaciones:** Gunicorn
-- **Base de datos:** MariaDB 10.11
-- **ORM:** SQLAlchemy + Flask-SQLAlchemy
-- **Migraciones:** Flask-Migrate
+- **Base de datos:** MongoDB 7
+- **Driver ODM:** PyMongo + Flask-PyMongo
 - **Autenticación:** Flask-Login, Flask-WTF (CSRF)
 - **CORS:** Flask-Cors
 - **CDN de imágenes:** Cloudinary
@@ -64,69 +63,39 @@ El objetivo es centralizar toda la información relevante y facilitar la gestió
 		```sh
 		docker compose up --build
 		```
-	- Esto descargará las imágenes necesarias, construirá la imagen de la app y levantará los servicios Traefik, MariaDB (base de datos) y la aplicación.
-	- Nota: el `docker-compose.yml` incluye Postgres como base de origen para migración/compatibilidad (la app corre contra MariaDB).
+	- Esto descargará las imágenes necesarias, construirá la imagen de la app y levantará los servicios Traefik, MongoDB (base de datos) y la aplicación.
 
-5. **Acceder a la web:**
+5. **Inicializar índices de MongoDB (opcional, recomendado):**
+	```sh
+	docker compose exec app python scripts/setup_mongodb_indexes.py
+	```
+	Esto crea índices en las colecciones para optimizar las búsquedas más frecuentes.
+
+6. **Acceder a la web:**
 	- Una vez levantado, accede a [http://localhost:5000](http://localhost:5000) en tu navegador para probar la aplicación localmente.
 
 ## Importante: ¿Qué pasa al levantar el proyecto?
 
-Al clonar este repositorio y ejecutar `docker compose up --build`, la aplicación **ya queda configurada para usar MariaDB** como base de datos principal (contenedor `mariadb`).
+Al clonar este repositorio y ejecutar `docker compose up --build`, la aplicación **ya queda configurada para usar MongoDB** como base de datos principal (contenedor `mongodb`).
 
-- El contenedor `db` (Postgres) también se levanta, pero **solo como fuente de datos para migrar** (la app no lo usa directamente).
-- **MariaDB arranca vacío la primera vez**. Para que la app funcione con datos reales, es necesario correr los scripts de migración (crear el esquema y migrar los datos desde Postgres a MariaDB).
-- Si no se corre la migración, la app en MariaDB estará vacía (sin tablas ni datos).
+- MongoDB arranca vacío la primera vez.
+- Las colecciones se crean **automáticamente** cuando la aplicación realiza la primera inserción de documentos.
+- No requiere migraciones previas ni scripts de inicialización de esquema.
+- Los datos se almacenan en volúmenes de Docker (`mongodata`) para persistencia.
 
 **En resumen:**
-- Al levantar los contenedores, la app apunta a MariaDB, pero hay que migrar los datos desde Postgres manualmente con los comandos del README.
-- Postgres queda solo como “fuente” para migrar, no como base activa de la app.
+- Al levantar los contenedores, la app apunta a MongoDB.
+- Las colecciones se crean automáticamente sin intervención manual.
+- Opcionalmente, ejecuta `setup_mongodb_indexes.py` para crear índices de optimización.
 
 ---
 
-## Cómo migrar de Postgres a MariaDB (paso a paso)
+## Estructura del Proyecto
 
-Este proyecto incluye scripts y configuración para migrar todos los datos desde una base Postgres (contenedor `db`) a MariaDB (contenedor `mariadb`) usando Docker Compose. Así cualquier integrante puede repetir la migración o restaurar el entorno.
-
-**Pasos:**
-
-1. **Levantar los servicios necesarios:**
-	```sh
-	docker compose up -d --build
-	```
-	Esto inicia los contenedores de la app, MariaDB (`mariadb`), Postgres (`db`) y Traefik.
-
-2. **Crear el esquema en MariaDB:**
-	```sh
-	docker compose exec app bash -c 'export PROD_DATABASE_URI="mysql+pymysql://hockeyuser:hockeypass@mariadb:3306/hockey" ; python scripts/create_schema_mariadb.py'
-	```
-	Esto crea todas las tablas en MariaDB según los modelos ORM.
-
-3. **Migrar los datos desde Postgres a MariaDB:**
-	```sh
-	docker compose exec app bash -c 'export SOURCE_DATABASE_URL="postgresql+psycopg2://hockeyuser:hockeypass@db:5432/hockey" ; export TARGET_DATABASE_URL="mysql+pymysql://hockeyuser:hockeypass@mariadb:3306/hockey" ; python scripts/migrate_postgres_to_mariadb.py --wipe-target'
-	```
-	Esto copia todos los datos de Postgres a MariaDB (borrando antes el destino).
-
-4. **Verificar que la migración fue exitosa:**
-	```sh
-	docker compose exec app bash -c 'export SOURCE_DATABASE_URL="postgresql+psycopg2://hockeyuser:hockeypass@db:5432/hockey" ; export TARGET_DATABASE_URL="mysql+pymysql://hockeyuser:hockeypass@mariadb:3306/hockey" ; python scripts/verify_migration_counts.py'
-	```
-	Si todo está bien, mostrará: `OK: All common tables match row counts.`
-
-5. **Listo!**
-	La app ya estará usando MariaDB con todos los datos migrados. Podés acceder a [http://localhost:5000](http://localhost:5000) y probar los endpoints normalmente.
-
-**Notas:**
-- Si ya existe información en MariaDB, el paso 3 (`--wipe-target`) la borrará y reemplazará por la de Postgres.
-- Si hay cambios en los modelos, repetir los pasos 2 y 3 para actualizar el esquema y los datos.
-- Si hay otro Traefik ocupando los puertos 80/443, detenerlo o cambiar los puertos en `docker-compose.yml`.
-
-- `app/` Código fuente principal (modelos, rutas, servicios, recursos, etc.)
-- `migrations/` Migraciones de base de datos (alembic)
-- `scripts/` Scripts de utilidad para administración
+- `app/` Código fuente principal (modelos, rutas, servicios, recursos, repositorios, etc.)
+- `scripts/` Scripts de utilidad para administración (crear usuarios, modificar contraseñas, inicializar índices MongoDB)
 - `app/traefik/` Configuración de Traefik (proxy inverso y certificados)
-- `Dockerfile` y `docker-compose.yml` para despliegue y desarrollo
+- `Dockerfile` y `docker-compose.yml` para despliegue y desarrollo con MongoDB
 
 ---
 
