@@ -39,7 +39,8 @@ def init_login(app) -> None:
     from app.repositories.usuario_repositorio import UsuarioRepositorio
 
     login_manager.init_app(app)
-    login_manager.login_view = 'login_page'
+    # El login_page está dentro del blueprint 'static_pages'
+    login_manager.login_view = 'static_pages.login_page'
 
     @login_manager.user_loader
     def load_user(user_id):
