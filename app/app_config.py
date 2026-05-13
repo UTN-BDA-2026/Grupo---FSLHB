@@ -30,6 +30,14 @@ def apply_app_config(app, config_name: str | None = None) -> str:
         app.config['TESTING'] = False
 
     app.config['MONGO_URI'] = mongo_uri
+
+    # MariaDB / SQLAlchemy (usado por algunos modelos, p.ej. Jugadora)
+    app.config['SQLALCHEMY_DATABASE_URI'] = (
+        os.getenv('DATABASE_URL')
+        or os.getenv('PROD_DATABASE_URI')
+        or 'mysql+pymysql://hockeyuser:hockeypass@localhost:3307/hockey'
+    )
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['PREFERRED_URL_SCHEME'] = 'https'
 
     secret_key = os.environ.get('SECRET_KEY')

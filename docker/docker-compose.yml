@@ -27,10 +27,26 @@ services:
     volumes:
       - mongodata:/data/db
 
+  mariadb:
+    image: mariadb:10.11
+    restart: always
+    environment:
+      MARIADB_DATABASE: hockey
+      MARIADB_USER: hockeyuser
+      MARIADB_PASSWORD: hockeypass
+      MARIADB_ROOT_PASSWORD: rootpass
+    ports:
+      - "3307:3306"
+    volumes:
+      - mariadbdata:/var/lib/mysql
+
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     depends_on:
       - mongodb
+      - mariadb
       - traefik
     ports:
       - "5000:5000"
@@ -41,6 +57,7 @@ services:
       # Local: permitir sesión/login por HTTP (cookies no-secure)
       SESSION_COOKIE_SECURE: "false"
       MONGO_URI: mongodb://admin:adminpass@mongodb:27017/hockey?authSource=admin
+      DATABASE_URL: mysql+pymysql://hockeyuser:hockeypass@mariadb:3306/hockey
       FLASK_APP: app
       FLASK_DEBUG: "0"
       HOST: 0.0.0.0
@@ -59,5 +76,6 @@ services:
 
 volumes:
   mongodata:
+  mariadbdata:
   traefik_acme:
 
