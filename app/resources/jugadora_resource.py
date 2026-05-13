@@ -4,8 +4,9 @@ from flask_login import login_required, current_user
 from app.models import Jugadora
 from app.repositories.jugadora_repositorio import JugadoraRepository
 from app.mappings.jugadora_mapping import JugadoraSchema
-from app.extensions import mongo
+from app.extensions import mongo, db
 from bson import ObjectId
+from sqlalchemy import func
 
 jugadora_bp = Blueprint('jugadora', __name__)
 jugadora_schema = JugadoraSchema()
@@ -54,7 +55,7 @@ def obtener_jugadoras():
         if not equipo:
             return jsonify({'error': 'Equipo no encontrado'}), 404
         # Buscar jugadoras por club y categoría del equipo
-        jugadoras = JugadoraRepository.buscar_por_club(equipo.club_id)
+        jugadoras = JugadoraRepository.buscar_por_club(str(equipo.club_id) if getattr(equipo, 'club_id', None) else None)
         # Filtrar por categoría si corresponde
         if equipo.categoria:
             def norm(s):
@@ -70,26 +71,37 @@ def obtener_jugadoras():
 @jugadora_bp.route('/jugadoras/resumen', methods=['GET'])
 def resumen_jugadoras():
     """Devuelve un resumen de cantidad de jugadoras por club y categoría para depuración."""
-    pipeline = [
-        {'$group': {
-            '_id': {'club_id': '$club_id', 'categoria': '$categoria'},
-            'cantidad': {'$sum': 1}
-        }},
-        {'$sort': {'_id.club_id': 1, '_id.categoria': 1}}
-    ]
-    results = list(mongo.db.jugadoras.aggregate(pipeline))
+    rows = (
+        db.session.query(
+            Jugadora.club_id,
+            Jugadora.categoria,
+            func.count(Jugadora.id).label('cantidad'),
+        )
+        .group_by(Jugadora.club_id, Jugadora.categoria)
+        .order_by(Jugadora.club_id.asc(), Jugadora.categoria.asc())
+        .all()
+    )
 
-    # Obtener nombres de clubes
-    club_ids = list(set(r['_id']['club_id'] for r in results if r['_id'].get('club_id')))
-    clubes = {d['_id']: d['nombre'] for d in mongo.db.clubes.find({'_id': {'$in': club_ids}}, {'nombre': 1})}
+    # Obtener nombres de clubes desde Mongo (club_id guarda ObjectId como string)
+    club_oids = []
+    for club_id, _cat, _cant in rows:
+        try:
+            club_oids.append(ObjectId(str(club_id)))
+        except Exception:
+            continue
+    clubes = {
+        str(d['_id']): d.get('nombre', '')
+        for d in mongo.db.clubes.find({'_id': {'$in': club_oids}}, {'nombre': 1})
+    }
 
     data = [
         {
-            'club_id': str(r['_id']['club_id']),
-            'club_nombre': clubes.get(r['_id']['club_id'], ''),
-            'categoria': r['_id'].get('categoria') or '',
-            'cantidad': r['cantidad']
-        } for r in results
+            'club_id': str(club_id),
+            'club_nombre': clubes.get(str(club_id), ''),
+            'categoria': categoria or '',
+            'cantidad': int(cantidad),
+        }
+        for club_id, categoria, cantidad in rows
     ]
     return jsonify(data), 200
 
