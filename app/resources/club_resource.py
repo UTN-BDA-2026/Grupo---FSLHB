@@ -20,14 +20,14 @@ def buscar_todos():
     clubs = ClubService.buscar_todos()
     return club_schema.dump(clubs, many=True), 200
 
-@clubs_bp.route('/clubs/<int:id>', methods=['GET'])
+@clubs_bp.route('/clubs/<id>', methods=['GET'])
 def buscar_por_id(id):
     club = ClubService.buscar_por_id(id)
     if not club:
         return jsonify({'error': 'Club no encontrado'}), 404
     return club_schema.dump(club), 200
 
-@clubs_bp.route('/clubs/<int:id>', methods=['PUT'])
+@clubs_bp.route('/clubs/<id>', methods=['PUT'])
 @require_admin
 def actualizar(id):
     club = ClubService.buscar_por_id(id)
@@ -38,7 +38,7 @@ def actualizar(id):
     ClubService.actualizar(club)
     return club_schema.dump(club), 200
 
-@clubs_bp.route('/clubs/<int:id>', methods=['DELETE'])
+@clubs_bp.route('/clubs/<id>', methods=['DELETE'])
 @require_admin
 def borrar_por_id(id):
     club = ClubService.borrar_por_id(id)
@@ -46,7 +46,7 @@ def borrar_por_id(id):
         return jsonify({'error': 'Club no encontrado'}), 404
     return jsonify({'message': 'Club borrado exitosamente'}), 200
 
-@clubs_bp.route('/clubs/<int:id>/arbitro', methods=['GET'])
+@clubs_bp.route('/clubs/<id>/arbitro', methods=['GET'])
 def obtener_arbitro_club(id):
     arb = ClubService.obtener_arbitro(id)
     if not arb:

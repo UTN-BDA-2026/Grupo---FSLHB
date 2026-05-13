@@ -22,14 +22,14 @@ def crear_equipo():
 
 @equipo_bp.route('/equipos', methods=['GET'])
 def obtener_equipos():
-    club_id = request.args.get('club_id', type=int)
+    club_id = request.args.get('club_id')
     if club_id:
         equipos = EquipoRepository.buscar_por_club(club_id)
     else:
         equipos = EquipoRepository.buscar_todos()
     return jsonify(equipos_schema.dump(equipos))
 
-@equipo_bp.route('/equipos/<int:id>', methods=['PUT'])
+@equipo_bp.route('/equipos/<id>', methods=['PUT'])
 def actualizar_equipo(id):
     data = request.get_json()
     equipo = EquipoRepository.buscar_por_id(id)
@@ -43,7 +43,7 @@ def actualizar_equipo(id):
     EquipoRepository.actualizar_equipo(equipo)
     return jsonify(equipo_schema.dump(equipo))
 
-@equipo_bp.route('/equipos/<int:id>', methods=['DELETE'])
+@equipo_bp.route('/equipos/<id>', methods=['DELETE'])
 def borrar_equipo(id):
     equipo = EquipoRepository.borrar_por_id(id)
     if not equipo:
@@ -51,10 +51,10 @@ def borrar_equipo(id):
     return jsonify({'resultado': 'Eliminado'})
 
 
-@equipo_bp.route('/admin/equipos/<int:id>/categoria', methods=['PUT'])
+@equipo_bp.route('/admin/equipos/<id>/categoria', methods=['PUT'])
 @csrf.exempt
 @require_admin
-def actualizar_categoria_equipo_admin(id: int):
+def actualizar_categoria_equipo_admin(id: str):
     data = request.get_json() or {}
     nueva_cat = (data.get('categoria') or '').strip()
     if not nueva_cat:

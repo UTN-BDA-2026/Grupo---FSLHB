@@ -1,4 +1,6 @@
 from collections import defaultdict
+from bson import ObjectId
+from app.extensions import mongo
 from app.repositories.partido_repositorio import PartidoRepository
 from app.repositories.incidencia_repositorio import IncidenciaRepository
 from app.repositories.equipo_repositorio import EquipoRepository
@@ -59,6 +61,31 @@ def obtener_tabla_posiciones(torneo, division, fecha, bloque):
 
     # Obtener todos los equipos de la categoría
     equipos_cat = EquipoRepository.buscar_por_categoria(division)
+
+    def _to_oid(value):
+        if value is None:
+            return None
+        if isinstance(value, ObjectId):
+            return value
+        try:
+            return ObjectId(str(value))
+        except Exception:
+            return None
+
+    def _json_id(value):
+        return str(value) if isinstance(value, ObjectId) else value
+
+    club_oids = [oid for oid in (_to_oid(eq.club_id) for eq in equipos_cat) if oid is not None]
+    club_nombre = {}
+    if club_oids:
+        for d in mongo.db.clubes.find({'_id': {'$in': club_oids}}, {'nombre': 1}):
+            club_nombre[d['_id']] = d.get('nombre') or ''
+
+    def _club_name(club_id):
+        oid = _to_oid(club_id)
+        if oid is not None and oid in club_nombre:
+            return club_nombre[oid]
+        return f"Club {club_id}"
     equipos_por_club = defaultdict(list)
     equipos_por_id = {}
     for eq in equipos_cat:
@@ -91,7 +118,7 @@ def obtener_tabla_posiciones(torneo, division, fecha, bloque):
         tloc['equipo_id'] = eq_local.id
         tloc['club_id'] = eq_local.club_id
         tloc['equipo'] = eq_local.nombre
-        tloc['club'] = eq_local.club.nombre if eq_local.club else f"Club {eq_local.club_id}"
+        tloc['club'] = _club_name(eq_local.club_id)
         tloc['categoria'] = eq_local.categoria or division or ''
         tloc['pj'] += 1
         tloc['gf'] += loc
@@ -101,7 +128,7 @@ def obtener_tabla_posiciones(torneo, division, fecha, bloque):
         tvis['equipo_id'] = eq_vis.id
         tvis['club_id'] = eq_vis.club_id
         tvis['equipo'] = eq_vis.nombre
-        tvis['club'] = eq_vis.club.nombre if eq_vis.club else f"Club {eq_vis.club_id}"
+        tvis['club'] = _club_name(eq_vis.club_id)
         tvis['categoria'] = eq_vis.categoria or division or ''
         tvis['pj'] += 1
         tvis['gf'] += vis
@@ -131,7 +158,7 @@ def obtener_tabla_posiciones(torneo, division, fecha, bloque):
                 'equipo_id': eq.id,
                 'club_id': eq.club_id,
                 'equipo': eq.nombre,
-                'club': eq.club.nombre if eq.club else f"Club {eq.club_id}",
+                'club': _club_name(eq.club_id),
                 'categoria': eq.categoria or division or '',
                 'pj': 0, 'pg': 0, 'pe': 0, 'pp': 0,
                 'gf': 0, 'gc': 0, 'dif': 0,
@@ -190,7 +217,7 @@ def obtener_tabla_posiciones(torneo, division, fecha, bloque):
                 break
         salida.append({
             'pos': i,
-            'equipo_id': r['equipo_id'],
+            'equipo_id': _json_id(r['equipo_id']),
             'logo': f"/static/assets/img/{logo_file}" if logo_file else None,
             'zona': r['zona'],
             'equipo': r['equipo'],

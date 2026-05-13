@@ -5,6 +5,20 @@ from app.models.jugadora import Jugadora
 
 class JugadoraRepository:
     @staticmethod
+    def _to_oid(value):
+        if value is None:
+            return None
+        if isinstance(value, ObjectId):
+            return value
+        try:
+            s = str(value).strip()
+            if not s or s.lower() in ('null', 'undefined', 'none'):
+                return None
+            return ObjectId(s)
+        except Exception:
+            return None
+
+    @staticmethod
     def _col():
         return mongo.db.jugadoras
 
@@ -18,7 +32,10 @@ class JugadoraRepository:
 
     @staticmethod
     def buscar_por_id(id):
-        doc = JugadoraRepository._col().find_one({'_id': ObjectId(id)})
+        oid = JugadoraRepository._to_oid(id)
+        if oid is None:
+            return None
+        doc = JugadoraRepository._col().find_one({'_id': oid})
         return Jugadora.from_dict(doc)
 
     @staticmethod
@@ -28,7 +45,10 @@ class JugadoraRepository:
 
     @staticmethod
     def buscar_por_club(club_id):
-        docs = JugadoraRepository._col().find({'club_id': ObjectId(club_id)})
+        oid = JugadoraRepository._to_oid(club_id)
+        if oid is None:
+            return []
+        docs = JugadoraRepository._col().find({'club_id': oid})
         return [Jugadora.from_dict(d) for d in docs]
 
     @staticmethod
@@ -47,5 +67,8 @@ class JugadoraRepository:
         jugadora = JugadoraRepository.buscar_por_id(id)
         if not jugadora:
             return None
-        JugadoraRepository._col().delete_one({'_id': ObjectId(id)})
+        oid = JugadoraRepository._to_oid(id)
+        if oid is None:
+            return None
+        JugadoraRepository._col().delete_one({'_id': oid})
         return jugadora

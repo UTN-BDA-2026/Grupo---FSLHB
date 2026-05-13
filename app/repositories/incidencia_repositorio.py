@@ -5,6 +5,17 @@ from app.models.incidencia import Incidencia
 
 class IncidenciaRepository:
     @staticmethod
+    def _to_oid(value):
+        if value is None:
+            return None
+        if isinstance(value, ObjectId):
+            return value
+        try:
+            return ObjectId(str(value))
+        except Exception:
+            return None
+
+    @staticmethod
     def _col():
         return mongo.db.incidencias
 
@@ -18,8 +29,11 @@ class IncidenciaRepository:
 
     @staticmethod
     def listar_por_partido(partido_id):
+        oid = IncidenciaRepository._to_oid(partido_id)
+        if oid is None:
+            return []
         docs = IncidenciaRepository._col().find(
-            {'partido_id': ObjectId(partido_id)}
+            {'partido_id': oid}
         ).sort('created_at', 1)
         return [Incidencia.from_dict(d) for d in docs]
 
@@ -27,7 +41,10 @@ class IncidenciaRepository:
     def listar_goles_por_partidos(partido_ids):
         if not partido_ids:
             return []
-        oids = [ObjectId(pid) for pid in partido_ids]
+        oids = [IncidenciaRepository._to_oid(pid) for pid in partido_ids]
+        oids = [o for o in oids if o is not None]
+        if not oids:
+            return []
         docs = IncidenciaRepository._col().find(
             {'partido_id': {'$in': oids}, 'tipo': 'gol'}
         )
@@ -37,7 +54,10 @@ class IncidenciaRepository:
     def max_created_at_por_partido(partido_ids):
         if not partido_ids:
             return {}
-        oids = [ObjectId(pid) for pid in partido_ids]
+        oids = [IncidenciaRepository._to_oid(pid) for pid in partido_ids]
+        oids = [o for o in oids if o is not None]
+        if not oids:
+            return {}
         pipeline = [
             {'$match': {'partido_id': {'$in': oids}}},
             {'$group': {'_id': '$partido_id', 'max_dt': {'$max': '$created_at'}}}
@@ -76,21 +96,31 @@ class IncidenciaRepository:
 
     @staticmethod
     def eliminar(partido_id, incidencia_id):
+        pid = IncidenciaRepository._to_oid(partido_id)
+        iid = IncidenciaRepository._to_oid(incidencia_id)
+        if pid is None or iid is None:
+            return False
         result = IncidenciaRepository._col().delete_one(
-            {'_id': ObjectId(incidencia_id), 'partido_id': ObjectId(partido_id)}
+            {'_id': iid, 'partido_id': pid}
         )
         return result.deleted_count > 0
 
     @staticmethod
     def listar_tarjetas_por_jugadora(jugadora_id):
+        oid = IncidenciaRepository._to_oid(jugadora_id)
+        if oid is None:
+            return []
         docs = IncidenciaRepository._col().find(
-            {'jugadora_id': ObjectId(jugadora_id), 'tipo': 'tarjeta'}
+            {'jugadora_id': oid, 'tipo': 'tarjeta'}
         ).sort('created_at', 1)
         return [Incidencia.from_dict(d) for d in docs]
 
     @staticmethod
     def eliminar_por_id(incidencia_id):
+        iid = IncidenciaRepository._to_oid(incidencia_id)
+        if iid is None:
+            return False
         result = IncidenciaRepository._col().delete_one(
-            {'_id': ObjectId(incidencia_id)}
+            {'_id': iid}
         )
         return result.deleted_count > 0

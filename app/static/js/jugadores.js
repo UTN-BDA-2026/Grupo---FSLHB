@@ -4,10 +4,14 @@ let filtroDebounce = null;
 async function cargarJugadoras(force = false) {
     const tbody = document.getElementById('tabla-jugadores').querySelector('tbody');
     const isOperador = localStorage.getItem('isOperador') === 'true';
-    const clubId = localStorage.getItem('club_id');
+    const clubIdRaw = localStorage.getItem('club_id');
+    const clubId = (clubIdRaw && clubIdRaw !== 'null' && clubIdRaw !== 'undefined') ? clubIdRaw : '';
     try {
         if (!jugadorasCache.length || force) {
-            const resp = await fetch(`/jugadoras?club_id=${clubId}`);
+            const params = new URLSearchParams();
+            if (clubId) params.set('club_id', clubId);
+            const url = params.toString() ? `/jugadoras?${params.toString()}` : '/jugadoras';
+            const resp = await fetch(url);
             if (!resp.ok) throw new Error('Error al obtener jugadoras');
             jugadorasCache = await resp.json();
         }
@@ -52,7 +56,7 @@ async function cargarJugadoras(force = false) {
                 <td>${jugadora.categoria || ''}</td>`;
             // Agregar botón borrar solo si NO es operador y existe club
             if (!isOperador && clubId) {
-                cols += `<td><button class="btn-borrar-jugador" onclick="borrarJugador(${jugadora.id}, this)"><i class='fas fa-trash'></i> Borrar</button></td>`;
+                cols += `<td><button class="btn-borrar-jugador" onclick="borrarJugador('${jugadora.id}', this)"><i class='fas fa-trash'></i> Borrar</button></td>`;
             } else {
                 cols += `<td></td>`;
             }
@@ -147,7 +151,7 @@ document.addEventListener('DOMContentLoaded', function() {
 async function borrarJugador(id, btn) {
     if (!confirm('¿Seguro que desea borrar este jugador?')) return;
     try {
-        const response = await fetch(`/jugadoras/${id}`, {
+        const response = await fetch(`/jugadoras/${encodeURIComponent(id)}`, {
             method: 'DELETE'
         });
         if (response.ok) {

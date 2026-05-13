@@ -257,9 +257,9 @@ def descargar_goleadores_excel():
     return resp
 
 
-@incidencia_bp.route('/admin/jugadoras/<int:jugadora_id>/incidencias', methods=['GET'])
+@incidencia_bp.route('/admin/jugadoras/<jugadora_id>/incidencias', methods=['GET'])
 @require_admin
-def listar_incidencias_por_jugadora_admin(jugadora_id: int):
+def listar_incidencias_por_jugadora_admin(jugadora_id: str):
     """Devuelve las incidencias de tipo tarjeta de una jugadora para uso del panel admin."""
     incidencias = IncidenciaService.listar_tarjetas_por_jugadora(jugadora_id)
 
@@ -284,10 +284,10 @@ def listar_incidencias_por_jugadora_admin(jugadora_id: int):
     return jsonify(resultado)
 
 
-@incidencia_bp.route('/admin/jugadoras/<int:jugadora_id>/incidencias', methods=['POST'])
+@incidencia_bp.route('/admin/jugadoras/<jugadora_id>/incidencias', methods=['POST'])
 @csrf.exempt
 @require_admin
-def crear_incidencia_tarjeta_admin(jugadora_id: int):
+def crear_incidencia_tarjeta_admin(jugadora_id: str):
     """Crea una incidencia de tipo tarjeta para una jugadora desde el panel admin."""
     data = request.get_json(silent=True) or {}
     partido_id = data.get('partido_id')
@@ -302,17 +302,17 @@ def crear_incidencia_tarjeta_admin(jugadora_id: int):
         return jsonify({'error': 'Color de tarjeta inválido'}), 400
 
     try:
-        inc = IncidenciaService.registrar_tarjeta(partido_id=int(partido_id), club_id=int(club_id), jugadora_id=jugadora_id, color=color, minuto=minuto)
+        inc = IncidenciaService.registrar_tarjeta(partido_id=partido_id, club_id=club_id, jugadora_id=jugadora_id, color=color, minuto=minuto)
     except Exception as exc:
         return jsonify({'error': 'No se pudo registrar la tarjeta', 'detail': str(exc)}), 500
 
     return jsonify({'id': inc.id}), 201
 
 
-@incidencia_bp.route('/admin/incidencias/<int:incidencia_id>', methods=['DELETE'])
+@incidencia_bp.route('/admin/incidencias/<incidencia_id>', methods=['DELETE'])
 @csrf.exempt
 @require_admin
-def eliminar_incidencia_admin(incidencia_id: int):
+def eliminar_incidencia_admin(incidencia_id: str):
     """Elimina una incidencia por id para el panel admin."""
     ok = IncidenciaService.eliminar_por_id(incidencia_id)
     if not ok:

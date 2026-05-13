@@ -49,10 +49,10 @@ def crear_mesa_control():
     return jsonify(data), 201
 
 
-@usuario_bp.route('/admin/mesas-control/<int:usuario_id>', methods=['DELETE'])
+@usuario_bp.route('/admin/mesas-control/<usuario_id>', methods=['DELETE'])
 @csrf.exempt
 @require_admin
-def eliminar_mesa_control(usuario_id: int):
+def eliminar_mesa_control(usuario_id: str):
     """Elimina un usuario de mesa de control por id."""
     ok = UsuarioService.eliminar_usuario(usuario_id)
     if not ok:
@@ -60,10 +60,10 @@ def eliminar_mesa_control(usuario_id: int):
     return jsonify({'ok': True}), 200
 
 
-@usuario_bp.route('/admin/mesas-control/<int:usuario_id>', methods=['PUT'])
+@usuario_bp.route('/admin/mesas-control/<usuario_id>', methods=['PUT'])
 @csrf.exempt
 @require_admin
-def actualizar_mesa_control(usuario_id: int):
+def actualizar_mesa_control(usuario_id: str):
     """Actualiza username y/o contraseña de una mesa de control."""
     payload = request.get_json() or {}
     try:

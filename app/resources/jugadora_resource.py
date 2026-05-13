@@ -38,8 +38,16 @@ def obtener_jugadora(id):
 
 @jugadora_bp.route('/jugadoras', methods=['GET'])
 def obtener_jugadoras():
-    club_id = request.args.get('club_id')
-    equipo_id = request.args.get('equipo_id')
+    def _clean(v):
+        if v is None:
+            return None
+        s = str(v).strip()
+        if not s or s.lower() in ('null', 'undefined', 'none'):
+            return None
+        return s
+
+    club_id = _clean(request.args.get('club_id'))
+    equipo_id = _clean(request.args.get('equipo_id'))
     if equipo_id:
         from app.repositories.equipo_repositorio import EquipoRepository
         equipo = EquipoRepository.buscar_por_id(equipo_id)
