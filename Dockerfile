@@ -26,5 +26,11 @@ RUN python -m pip install --upgrade pip \
 # Expone el puerto para la app
 EXPOSE 5000
 
+# Nota: Base de datos MongoDB
+# - Las colecciones se crean automáticamente con la primera inserción
+# - No requiere migraciones de SQLAlchemy (legacy)
+# - Los índices pueden inicializarse con: python scripts/setup_mongodb_indexes.py
+# - Volumen persistente: mongodata
+
 # Comando para iniciar la app con Gunicorn (producción)
 CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]
