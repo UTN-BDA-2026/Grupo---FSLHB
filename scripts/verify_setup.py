@@ -68,7 +68,6 @@ def check_mongodb_connection() -> Tuple[bool, str]:
 def check_collections_exist() -> Tuple[bool, dict]:
     """Verifica que las colecciones existen."""
     critical = ['usuarios', 'clubes', 'equipos', 'partidos']
-    optional = ['noticias', 'torneo', 'jugadora', 'incidencias']
     
     db = mongo.db
     existing_critical = []
@@ -81,6 +80,7 @@ def check_collections_exist() -> Tuple[bool, dict]:
                 existing_critical.append(col_name)
         except:
             missing_critical.append(col_name)
+            raise
     
     return len(missing_critical) == 0, {
         'critical': {'existing': existing_critical, 'missing': missing_critical},

@@ -15,6 +15,7 @@ class Config(object):
 
     @staticmethod
     def init_app(app):
+        # This placeholder exists so subclasses can optionally extend
         pass
 
 class TestConfig(Config):

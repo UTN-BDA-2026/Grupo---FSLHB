@@ -88,7 +88,7 @@ def create_collection_indexes(db):
             print(f"\n📋 Colección: {collection_name}")
             
             for (fields, options), description in index_list:
-                index_key = tuple(fields)
+                tuple(fields)
                 
                 # Verificar si el índice ya existe
                 index_exists = False

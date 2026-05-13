@@ -227,7 +227,7 @@ Ejemplos:
     
     print_header("INICIALIZACIÓN - HOCKEY ACCIÓN")
     
-    exit_code = 0
+
     
     try:
         # 1. Verificar conexión
