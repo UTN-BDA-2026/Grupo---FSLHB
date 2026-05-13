@@ -25,6 +25,12 @@ def create_app(config_name: str | None = None) -> Flask:
     init_extensions(app)
     init_cors(app, effective_config_name)
 
+    # Asegurar tablas SQL necesarias (MariaDB) para modelos SQLAlchemy.
+    from app.extensions import db
+    from app.models.jugadora import Jugadora  # noqa: F401
+    with app.app_context():
+        db.create_all()
+
     for bp in ALL_BLUEPRINTS:
         app.register_blueprint(bp)
 

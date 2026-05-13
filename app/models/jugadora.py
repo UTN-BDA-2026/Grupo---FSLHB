@@ -1,58 +1,20 @@
-"""Modelo Jugadora - Documento MongoDB."""
+"""Modelo Jugadora - MariaDB (SQLAlchemy)."""
+
+from app.extensions import db
 
 
-class Jugadora:
-    COLLECTION = 'jugadoras'
+class Jugadora(db.Model):
+    __tablename__ = 'jugadoras'
 
-    def __init__(self, nombre, apellido, club_id, dni=None,
-                 fecha_nacimiento=None, categoria=None, _id=None):
-        self._id = _id
-        self.nombre = nombre
-        self.apellido = apellido
-        self.dni = dni
-        self.fecha_nacimiento = fecha_nacimiento
-        self.categoria = categoria
-        self.club_id = club_id
-
-    @property
-    def id(self):
-        return self._id
-
-    @id.setter
-    def id(self, value):
-        self._id = value
-
-    def to_dict(self):
-        d = {
-            'nombre': self.nombre,
-            'apellido': self.apellido,
-            'dni': self.dni,
-            'fecha_nacimiento': self.fecha_nacimiento,
-            'categoria': self.categoria,
-            'club_id': self.club_id,
-        }
-        if self._id is not None:
-            d['_id'] = self._id
-        return d
-
-    @classmethod
-    def from_dict(cls, data):
-        if data is None:
-            return None
-        return cls(
-            _id=data.get('_id'),
-            nombre=data.get('nombre'),
-            apellido=data.get('apellido'),
-            dni=data.get('dni'),
-            fecha_nacimiento=data.get('fecha_nacimiento'),
-            categoria=data.get('categoria'),
-            club_id=data.get('club_id'),
-        )
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    apellido = db.Column(db.String(100), nullable=False)
+    dni = db.Column(db.String(32), unique=True, nullable=True)
+    # Se mantiene como string (YYYY-MM-DD) para compatibilidad con frontend actual.
+    fecha_nacimiento = db.Column(db.String(32), nullable=True)
+    categoria = db.Column(db.String(64), nullable=True)
+    # En Mongo, los clubes usan ObjectId; acá se guarda como string hex (24 chars).
+    club_id = db.Column(db.String(64), nullable=False, index=True)
 
     def __repr__(self):
         return f'<Jugadora {self.apellido}, {self.nombre}>'
-
-    def __eq__(self, other):
-        if not isinstance(other, Jugadora):
-            return False
-        return self._id == other._id
