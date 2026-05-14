@@ -17,7 +17,8 @@ function renderNoticiasSlider() {
   const contenedor = document.getElementById('noticias-destacadas');
   if (!contenedor) return;
   contenedor.innerHTML = noticiasData.map((noticia) => {
-  const noticiaHref = `/noticias?noticia=${noticia.id}`;
+  const noticiaId = noticia.id || noticia._id;
+  const noticiaHref = noticiaId ? `/noticias?noticia=${encodeURIComponent(String(noticiaId))}` : '/noticias';
   const imgSrc = resolverSrcImagen(noticia.imagen);
     return `
       <a class="noticia-slider" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-decoration:none;color:inherit;cursor:pointer;" href="${noticiaHref}">

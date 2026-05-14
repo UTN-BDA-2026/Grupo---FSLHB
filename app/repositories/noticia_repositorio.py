@@ -1,4 +1,5 @@
 from bson import ObjectId
+from bson.errors import InvalidId
 from app.extensions import mongo
 from app.models.noticia import Noticia
 
@@ -22,7 +23,11 @@ class NoticiaRepositorio:
 
     @staticmethod
     def obtener_por_id(noticia_id):
-        doc = NoticiaRepositorio._col().find_one({'_id': ObjectId(noticia_id)})
+        try:
+            oid = ObjectId(noticia_id)
+        except (InvalidId, TypeError):
+            return None
+        doc = NoticiaRepositorio._col().find_one({'_id': oid})
         return Noticia.from_dict(doc)
 
     @staticmethod
@@ -36,7 +41,11 @@ class NoticiaRepositorio:
 
     @staticmethod
     def eliminar_noticia(noticia_id):
-        result = NoticiaRepositorio._col().delete_one({'_id': ObjectId(noticia_id)})
+        try:
+            oid = ObjectId(noticia_id)
+        except (InvalidId, TypeError):
+            return False
+        result = NoticiaRepositorio._col().delete_one({'_id': oid})
         return result.deleted_count > 0
 
     @staticmethod

@@ -23,7 +23,12 @@ def _to_jsonable(value):
 def _jsonify_doc(doc: dict | None):
     if doc is None:
         return None
-    return _to_jsonable(doc)
+    data = _to_jsonable(doc)
+    # Compat: muchos JS usan `id`, pero en Mongo el campo suele ser `_id`
+    if isinstance(data, dict):
+        if 'id' not in data and data.get('_id') is not None:
+            data['id'] = data.get('_id')
+    return data
 
 @noticia_bp.route('/', methods=['GET'])
 def listar_noticias():

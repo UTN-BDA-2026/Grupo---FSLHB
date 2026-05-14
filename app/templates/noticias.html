@@ -88,8 +88,9 @@
     const main = document.querySelector('main');
     const destacada = document.getElementById('noticia-destacada');
     const todas = document.getElementById('todas-las-noticias');
-    if (noticiaIdx !== null) {
-      fetch(`/api/noticias/${noticiaIdx}`)
+    const hasNoticiaId = noticiaIdx !== null && noticiaIdx !== '' && noticiaIdx !== 'undefined' && noticiaIdx !== 'null';
+    if (hasNoticiaId) {
+      fetch(`/api/noticias/${encodeURIComponent(String(noticiaIdx))}`)
         .then(r => r.json())
         .then(n => {
           if (!n.error) {
@@ -114,12 +115,13 @@
         .then(noticias => {
           todas.innerHTML = noticias.map((n, idx) => {
             const imgSrc = resolverSrcImagen(n.imagen);
+            const noticiaId = n.id || n._id;
             return `
             <article style="background:#fff;border-radius:10px;box-shadow:0 1px 6px rgba(0,100,0,0.08);padding:1.2rem 1.5rem;margin-bottom:1.5rem;max-width:600px;margin-left:auto;margin-right:auto;">
               <h3>${n.titulo}</h3>
               ${imgSrc ? `<img src="${imgSrc}" alt="${n.titulo}" style="max-width:100%;border-radius:8px;margin-bottom:0.7rem;">` : ''}
               <p>${n.resumen}</p>
-              <a href="/noticias?noticia=${n.id}" style="color:#006400;font-weight:bold;">Ver más</a>
+              <a href="${noticiaId ? `/noticias?noticia=${encodeURIComponent(String(noticiaId))}` : '/noticias'}" style="color:#006400;font-weight:bold;">Ver más</a>
             </article>
           `}).join('');
         });
