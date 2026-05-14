@@ -61,18 +61,27 @@ El objetivo es centralizar toda la información relevante y facilitar la gestió
 4. **Construir la imagen y levantar los contenedores:**
 	- Desde la raíz del proyecto, ejecutar:
 		```sh
-		docker compose up --build
+		docker compose --project-directory . -f docker/docker-compose.yml up -d --build
 		```
 	- Esto descargará las imágenes necesarias, construirá la imagen de la app y levantará los servicios Traefik, MongoDB (base de datos) y la aplicación.
 
 5. **Inicializar índices de MongoDB (opcional, recomendado):**
 	```sh
-	docker compose exec app python scripts/setup_mongodb_indexes.py
+	docker compose --project-directory . -f docker/docker-compose.yml exec app python scripts/setup_mongodb_indexes.py
 	```
 	Esto crea índices en las colecciones para optimizar las búsquedas más frecuentes.
 
-6. **Acceder a la web:**
-	- Una vez levantado, accede a [http://localhost:5000](http://localhost:5000) en tu navegador para probar la aplicación localmente.
+
+6. **(Opcional pero recomendado) Ejecutar migración de datos inicial:**
+	- Si querés poblar la base de datos con datos existentes (por ejemplo, desde un backup de Postgres), ejecutá el siguiente comando para migrar los datos a MongoDB:
+	```sh
+	docker compose --project-directory . -f docker/docker-compose.yml exec app python scripts/migrate_postgres_to_mongodb.py
+	```
+	- Esto migrará los datos desde el backup de Postgres (verifica que el script y los archivos necesarios estén presentes en la carpeta `scripts/`).
+	- Si no ejecutás este paso, la base de datos quedará vacía y deberás cargar los datos manualmente.
+
+7. **Acceder a la web:**
+	- Una vez levantado y migrados los datos, accede a [http://localhost:5000](http://localhost:5000) en tu navegador para probar la aplicación localmente.
 
 ## Importante: ¿Qué pasa al levantar el proyecto?
 
