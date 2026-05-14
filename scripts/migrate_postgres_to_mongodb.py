@@ -544,7 +544,7 @@ def migrate_usuarios(pg: psycopg.Connection, db, club_map: dict[Any, ObjectId], 
 def main() -> int:
     parser = argparse.ArgumentParser(description='Migra datos de Postgres (docker) a MongoDB (app).')
 
-    parser.add_argument('--pg-dsn', default=os.getenv('SOURCE_DATABASE_URL') or os.getenv('DATABASE_URL'))
+    parser.add_argument('--pg-dsn', default=os.getenv('SOURCE_DATABASE_URL'))
     parser.add_argument('--pg-host', default=os.getenv('PGHOST', 'localhost'))
     parser.add_argument('--pg-port', default=int(os.getenv('PGPORT', '5433')))
     parser.add_argument('--pg-db', default=os.getenv('PGDATABASE', 'hockey'))
