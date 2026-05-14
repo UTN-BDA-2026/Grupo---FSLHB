@@ -12,18 +12,28 @@ def restore(dump_file: str):
     if not os.path.exists(dump_file):
         raise FileNotFoundError(dump_file)
 
-    # En este proyecto la base corre en Docker (servicio "db").
-    # Usamos pg_restore dentro del contenedor para no depender de
-    # tener las herramientas de PostgreSQL instaladas en Windows.
-    cmd = [
-        'docker-compose', 'exec', '-T', 'db',
+    # En Windows, docker compose exec con stdin puede tener problemas
+    # Por eso copiamos el archivo al contenedor y lo restauramos desde allí
+    
+    # 1. Copiar el dump al contenedor
+    cp_cmd = [
+        'docker', 'compose', '--project-directory', '.', '-f', 'docker/docker-compose.yml',
+        'cp', dump_file, 'db:/tmp/backup.dump'
+    ]
+    print("Copiando dump al contenedor...")
+    print('Comando:', ' '.join(shlex.quote(c) for c in cp_cmd))
+    subprocess.check_call(cp_cmd)
+    
+    # 2. Restaurar dentro del contenedor
+    restore_cmd = [
+        'docker', 'compose', '--project-directory', '.', '-f', 'docker/docker-compose.yml',
+        'exec', '-T', 'db',
         'pg_restore', '--clean', '--if-exists', '--no-owner', '--no-privileges',
-        '-U', 'hockeyuser', '-d', 'hockey', '-'
+        '-U', 'hockeyuser', '-d', 'hockey', '/tmp/backup.dump'
     ]
     print("Restaurando base dentro del contenedor 'db' con pg_restore...")
-    print('Comando:', ' '.join(shlex.quote(c) for c in cmd))
-    with open(dump_file, 'rb') as f:
-        subprocess.check_call(cmd, stdin=f)
+    print('Comando:', ' '.join(shlex.quote(c) for c in restore_cmd))
+    subprocess.check_call(restore_cmd)
     print("Restore OK")
 
 
