@@ -2,18 +2,13 @@ services:
   traefik:
     image: traefik:v3.1
     ports:
-      - "80:80"
-      - "443:443"
+      - "8444:443"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - ./app/traefik/config/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./app/traefik/config/config.yml:/etc/traefik/config.yml:ro
       - ./app/traefik/certs:/etc/certs:ro
-      - traefik_acme:/acme
     restart: always
     # Configuración por archivo traefik.yml/config.yml y certificados mkcert
-    labels:
-      - "traefik.enable=true"
 
   mongodb:
     image: mongo:7
@@ -61,14 +56,12 @@ services:
       - mariadb
       - db
       - traefik
-    ports:
-      - "5000:5000"
     environment:
       FLASK_ENV: production
       # Local: permitir HTTP directo en :5000 (sin redirección a https://localhost:5000)
-      FORCE_HTTPS: "false"
+      FORCE_HTTPS: "true"
       # Local: permitir sesión/login por HTTP (cookies no-secure)
-      SESSION_COOKIE_SECURE: "false"
+      SESSION_COOKIE_SECURE: "true"
       MONGO_URI: mongodb://admin:adminpass@mongodb:27017/hockey?authSource=admin
       DATABASE_URL: mysql+pymysql://hockeyuser:hockeypass@mariadb:3306/hockey
       # Variables para que el script de migración se conecte a Postgres dentro de la red Docker
@@ -97,5 +90,5 @@ volumes:
   mongodata:
   mariadbdata:
   postgresdata:
-  traefik_acme:
+
 
