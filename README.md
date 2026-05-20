@@ -85,8 +85,33 @@ El objetivo es centralizar toda la información relevante y facilitar la gestió
 	- Esto migrará los datos desde el backup de Postgres (verifica que el script y los archivos necesarios estén presentes en la carpeta `scripts/`).
 	- Si no ejecutás este paso, la base de datos quedará vacía y deberás cargar los datos manualmente.
 
-7. **Acceder a la web:**
-	- Una vez levantado y migrados los datos, accede a [http://localhost:5000](http://localhost:5000) en tu navegador para probar la aplicación localmente.
+7. **Acceder a la web (HTTPS con Traefik):**
+	- Una vez levantado (y migrados los datos), accedé a:
+		- **HTTPS:** https://localhost:8444
+		- (No se publica HTTP: el acceso es solo por HTTPS)
+	- Traefik está configurado **por archivo** (no usa `labels` ni `docker.sock`):
+		- Config dinámica: `app/traefik/config/config.yml`
+		- Config estática: `app/traefik/config/traefik.yml`
+	- Si al entrar por HTTPS te aparece el aviso "Su conexión no es privada", necesitás generar e instalar un certificado local confiable (mkcert):
+		1. Instalar mkcert (Windows, con winget):
+			```sh
+			winget install -e --id FiloSottile.mkcert
+			```
+			> Si `mkcert` no se reconoce, cerrá y abrí la terminal.
+		2. Instalar la CA local:
+			```sh
+			mkcert -install
+			```
+			> Si este paso falla por permisos, abrí PowerShell como **Administrador** y repetilo. Si ya estaba instalada, puede no hacer cambios.
+		3. Generar el certificado para este proyecto (se guarda en `app/traefik/certs/`):
+			```sh
+			mkcert -cert-file app/traefik/certs/cert.pem -key-file app/traefik/certs/key.pem localhost 127.0.0.1 ::1 universidad.localhost "*.universidad.localhost" traefik.universidad.localhost
+			```
+		4. Reiniciar Traefik para que tome el nuevo certificado:
+			```sh
+			docker compose --project-directory . -f docker/docker-compose.yml up -d --force-recreate traefik
+			```
+	- Nota: la app no expone `http://localhost:5000` al host; se accede solo vía Traefik.
 
 ## Respaldos (Backups) de las Bases de Datos
 
