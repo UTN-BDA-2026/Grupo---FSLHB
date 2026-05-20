@@ -68,60 +68,36 @@ SECRET_KEY=tu_clave_secreta_super_segura_aqui
 
 ```powershell
 # 1. Levantar los contenedores
-docker compose up --build
+docker compose --project-directory . -f docker/docker-compose.yml up -d --build
 
 # 2. En otro terminal: Verificar setup
-docker compose exec app python scripts/verify_setup.py
+docker compose --project-directory . -f docker/docker-compose.yml exec app python scripts/verify_setup.py
 
 # 3. Inicializar indices y crear usuario admin
-docker compose exec app python scripts/init_project.py --all
+docker compose --project-directory . -f docker/docker-compose.yml exec app python scripts/init_project.py --all
 
 # 4. Acceder a la app
-# http://localhost:5000
+# https://localhost:8444
 ```
+
+> Si al entrar por HTTPS ves el aviso de certificado, seguí el Paso 7 de [README.md](README.md) (mkcert).
 
 ### Opción 2: Inicialización por Pasos
 
 ```powershell
 # 1. Levantar Docker
-docker compose up -d
+docker compose --project-directory . -f docker/docker-compose.yml up -d
 
 # Esperar a que MongoDB esté listo (10-15 segundos)
-docker compose logs mongodb | findstr "waited for connections"
+docker compose --project-directory . -f docker/docker-compose.yml logs mongodb | findstr "waited for connections"
 
 # 2. Crear índices
-docker compose exec app python scripts/setup_mongodb_indexes.py
+docker compose --project-directory . -f docker/docker-compose.yml exec app python scripts/setup_mongodb_indexes.py
 
 # 3. Crear usuario admin interactivamente
-docker compose exec app python scripts/crear_usuario_generico.py --username admin --password TuContraseña123
+docker compose --project-directory . -f docker/docker-compose.yml exec app python scripts/crear_usuario_generico.py --username admin --password TuContraseña123
 
-# 4. Acceder a http://localhost:5000
-```
-
-### Opción 3: Inicialización Manual (Desarrollo local)
-
-```powershell
-# 1. Crear entorno virtual
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-
-# 2. Instalar dependencias
-pip install -r requirements.txt
-
-# 3. Asegurar que MongoDB está corriendo (Docker o local)
-docker run -d -p 27017:27017 \
-  -e MONGO_INITDB_ROOT_USERNAME=admin \
-  -e MONGO_INITDB_ROOT_PASSWORD=adminpass \
-  mongo:7
-
-# 4. Crear índices
-python scripts/setup_mongodb_indexes.py
-
-# 5. Crear usuario
-python scripts/crear_usuario_generico.py --username admin --password TuContraseña123
-
-# 6. Ejecutar app
-python run.py
+# 4. Acceder a https://localhost:8444
 ```
 
 ---
@@ -133,7 +109,7 @@ Verifica que todo está configurado correctamente antes de arrancar.
 
 ```powershell
 # Verificación completa
-docker compose exec app python scripts/verify_setup.py
+docker compose --project-directory . -f docker/docker-compose.yml exec app python scripts/verify_setup.py
 
 # Exit codes:
 # 0 = Todo OK
@@ -146,13 +122,13 @@ Crea y gestiona índices de MongoDB para optimizar búsquedas.
 
 ```powershell
 # Crear índices
-docker compose exec app python scripts/setup_mongodb_indexes.py
+docker compose --project-directory . -f docker/docker-compose.yml exec app python scripts/setup_mongodb_indexes.py
 
 # Resetear todos los índices
-docker compose exec app python scripts/setup_mongodb_indexes.py --reset
+docker compose --project-directory . -f docker/docker-compose.yml exec app python scripts/setup_mongodb_indexes.py --reset
 
 # Verificar índices existentes
-docker compose exec app python scripts/setup_mongodb_indexes.py --verify
+docker compose --project-directory . -f docker/docker-compose.yml exec app python scripts/setup_mongodb_indexes.py --verify
 ```
 
 **Índices creados:**
@@ -170,16 +146,16 @@ Inicialización completa del proyecto (conexión, índices, usuario admin).
 
 ```powershell
 # Modo interactivo (pregunta para cada paso)
-docker compose exec app python scripts/init_project.py
+docker compose --project-directory . -f docker/docker-compose.yml exec app python scripts/init_project.py
 
 # Crear todo automáticamente
-docker compose exec app python scripts/init_project.py --all
+docker compose --project-directory . -f docker/docker-compose.yml exec app python scripts/init_project.py --all
 
 # Sin crear índices
-docker compose exec app python scripts/init_project.py --skip-indexes
+docker compose --project-directory . -f docker/docker-compose.yml exec app python scripts/init_project.py --skip-indexes
 
 # Solo crear usuario admin
-docker compose exec app python scripts/init_project.py --create-admin
+docker compose --project-directory . -f docker/docker-compose.yml exec app python scripts/init_project.py --create-admin
 ```
 
 ### 👤 `scripts/crear_usuario_generico.py`
@@ -187,7 +163,7 @@ Crea usuarios con permisos específicos.
 
 ```powershell
 # Usuario admin
-docker compose exec app python scripts/crear_usuario_generico.py \
+docker compose --project-directory . -f docker/docker-compose.yml exec app python scripts/crear_usuario_generico.py \
   --username admin \
   --password TuContraseña123 \
   --operador \
@@ -195,7 +171,7 @@ docker compose exec app python scripts/crear_usuario_generico.py \
   --puede-precargar-equipos
 
 # Usuario de club
-docker compose exec app python scripts/crear_usuario_generico.py \
+docker compose --project-directory . -f docker/docker-compose.yml exec app python scripts/crear_usuario_generico.py \
   --username SanJorge.sr \
   --password Contraseña456 \
   --club "San Jorge"
@@ -207,7 +183,7 @@ Cambia la contraseña de un usuario.
 ```powershell
 # Editar archivo antes de ejecutar
 # Luego:
-docker compose exec app python scripts/modificar_contrasena.py
+docker compose --project-directory . -f docker/docker-compose.yml exec app python scripts/modificar_contrasena.py
 ```
 
 ---
@@ -222,13 +198,13 @@ docker compose exec app python scripts/modificar_contrasena.py
 
 ```powershell
 # Verificar que Docker Compose está ejecutando
-docker compose ps
+docker compose --project-directory . -f docker/docker-compose.yml ps
 
 # Revisar logs de MongoDB
-docker compose logs mongodb
+docker compose --project-directory . -f docker/docker-compose.yml logs mongodb
 
 # Reiniciar MongoDB
-docker compose restart mongodb
+docker compose --project-directory . -f docker/docker-compose.yml restart mongodb
 ```
 
 ### Problema: "Port 27017 already in use"
@@ -239,9 +215,9 @@ docker compose restart mongodb
 
 ```powershell
 # Opción 1: Detener el proceso anterior
-docker compose down
+docker compose --project-directory . -f docker/docker-compose.yml down
 
-# Opción 2: Cambiar puerto en docker-compose.yml
+# Opción 2: Cambiar puerto en docker/docker-compose.yml
 # Cambiar: "27017:27017" a "27018:27017"
 # Y actualizar MONGO_URI en .env
 ```
@@ -265,7 +241,7 @@ ENABLE_CSRF=false  # O asegurar que Flask-WTF está bien configurado
 
 ```powershell
 # Crear nuevo usuario
-docker compose exec app python scripts/crear_usuario_generico.py \
+docker compose --project-directory . -f docker/docker-compose.yml exec app python scripts/crear_usuario_generico.py \
   --username admin \
   --password NuevaContraseña123 \
   --operador
@@ -279,13 +255,13 @@ docker compose exec app python scripts/crear_usuario_generico.py \
 
 ```powershell
 # Verificar conexión
-docker compose exec app python scripts/verify_setup.py
+docker compose --project-directory . -f docker/docker-compose.yml exec app python scripts/verify_setup.py
 
 # Resetear y recrear
-docker compose exec app python scripts/setup_mongodb_indexes.py --reset
+docker compose --project-directory . -f docker/docker-compose.yml exec app python scripts/setup_mongodb_indexes.py --reset
 
 # Crear nuevamente
-docker compose exec app python scripts/setup_mongodb_indexes.py
+docker compose --project-directory . -f docker/docker-compose.yml exec app python scripts/setup_mongodb_indexes.py
 ```
 
 ---
@@ -294,23 +270,23 @@ docker compose exec app python scripts/setup_mongodb_indexes.py
 
 ```powershell
 # INICIALIZACIÓN
-docker compose up --build                    # Levantar todo
-docker compose exec app python scripts/init_project.py --all  # Inicializar completo
+docker compose --project-directory . -f docker/docker-compose.yml up -d --build                    # Levantar todo
+docker compose --project-directory . -f docker/docker-compose.yml exec app python scripts/init_project.py --all  # Inicializar completo
 
 # MONITOREO
-docker compose logs -f app                   # Ver logs de la app
-docker compose logs -f mongodb               # Ver logs de MongoDB
-docker compose ps                            # Ver estado de servicios
+docker compose --project-directory . -f docker/docker-compose.yml logs -f app                   # Ver logs de la app
+docker compose --project-directory . -f docker/docker-compose.yml logs -f mongodb               # Ver logs de MongoDB
+docker compose --project-directory . -f docker/docker-compose.yml ps                            # Ver estado de servicios
 
 # MANTENIMIENTO
-docker compose down                          # Detener todos los servicios
-docker compose down -v                       # Detener y limpiar volúmenes
-docker compose restart                       # Reiniciar servicios
-docker compose exec mongodb mongosh          # Conectar a MongoDB shell
+docker compose --project-directory . -f docker/docker-compose.yml down                          # Detener todos los servicios
+docker compose --project-directory . -f docker/docker-compose.yml down -v                       # Detener y limpiar volúmenes
+docker compose --project-directory . -f docker/docker-compose.yml restart                       # Reiniciar servicios
+docker compose --project-directory . -f docker/docker-compose.yml exec mongodb mongosh          # Conectar a MongoDB shell
 
 # DEBUGGING
-docker compose exec app python -i            # Python interactive en contenedor
-docker compose exec app bash                 # Bash shell en contenedor
+docker compose --project-directory . -f docker/docker-compose.yml exec app python -i            # Python interactive en contenedor
+docker compose --project-directory . -f docker/docker-compose.yml exec app bash                 # Bash shell en contenedor
 ```
 
 ---
@@ -331,8 +307,9 @@ Grupo---FSLHB/
 │   ├── verify_setup.py           # Verificar configuración
 │   ├── crear_usuario_generico.py # Crear usuarios
 │   └── modificar_contrasena.py   # Cambiar contraseñas
-├── docker-compose.yml            # Configuración Docker
-├── Dockerfile                    # Imagen de la aplicación
+├── docker/                       # Archivos Docker
+│   ├── docker-compose.yml         # Orquestación local (Traefik + HTTPS)
+│   └── Dockerfile                 # Imagen de la aplicación
 ├── requirements.txt              # Dependencias Python
 ├── .env                          # Variables de entorno (local)
 ├── .env.example                  # Plantilla de variables
@@ -346,9 +323,11 @@ Grupo---FSLHB/
 Si tienes problemas:
 
 1. Ejecuta `verify_setup.py` para diagnosticar
-2. Revisa los logs: `docker compose logs app`
+2. Revisa los logs: `docker compose --project-directory . -f docker/docker-compose.yml logs app`
 3. Revisa `.env` y asegurar MONGO_URI es correcta
-4. Reinicia todo: `docker compose down && docker compose up --build`
+4. Reinicia todo:
+  - `docker compose --project-directory . -f docker/docker-compose.yml down`
+  - `docker compose --project-directory . -f docker/docker-compose.yml up -d --build`
 
 ---
 
