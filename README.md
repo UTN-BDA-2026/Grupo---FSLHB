@@ -88,6 +88,31 @@ El objetivo es centralizar toda la información relevante y facilitar la gestió
 7. **Acceder a la web:**
 	- Una vez levantado y migrados los datos, accede a [http://localhost:5000](http://localhost:5000) en tu navegador para probar la aplicación localmente.
 
+## Respaldos (Backups) de las Bases de Datos
+
+Para facilitar la generación de copias de seguridad tanto de MariaDB como de MongoDB, el proyecto cuenta con un script automatizado para entornos de Windows.
+
+8. **Generar un nuevo backup manual:**
+    - Verificá que los contenedores estén encendidos (el motor de base de datos debe estar corriendo para extraer los datos).
+    - Ejecutá el script de PowerShell desde la raíz del proyecto:
+    ```ps1
+	.\generar_backups.ps1
+
+9. **Restaurar un backup (En caso de error o migración de PC):**
+	- Si necesitás restablecer la base de datos a un punto anterior, primero se copia el archivo de backup hacia dentro del contenedor y luego se ejecuta la restauración.
+	- Reemplazá `[ARCHIVO]` por el nombre exacto de tu archivo generado (por ejemplo, `mariadb_20260514_193000.sql`).
+
+	- **Para restaurar MariaDB:**
+	```sh
+	docker compose --project-directory . -f docker/docker-compose.yml cp .\backups\[ARCHIVO].sql mariadb:/tmp/restore.sql
+	docker compose --project-directory . -f docker/docker-compose.yml exec mariadb sh -c "mariadb -u hockeyuser -phockeypass hockey < /tmp/restore.sql"
+	- Para restaurar MongoDB:
+	 ```sh
+	docker compose --project-directory . -f docker/docker-compose.yml cp .\backups[ARCHIVO].archive mongodb:/tmp/restore.archive
+	docker compose --project-directory . -f docker/docker-compose.yml exec mongodb sh -c "mongorestore --username admin --password adminpass --authenticationDatabase admin --archive=/tmp/restore.archive --drop"
+
+
+
 ## Importante: ¿Qué pasa al levantar el proyecto?
 
 Al clonar este repositorio y ejecutar `docker compose up --build`, la aplicación **ya queda configurada para usar MongoDB** como base de datos principal (contenedor `mongodb`).
