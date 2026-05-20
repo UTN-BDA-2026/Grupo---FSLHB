@@ -3,7 +3,7 @@ global:
 
 api:
   dashboard: true
-  insecure: false
+  insecure: true
 
 providers:
   file:
@@ -16,15 +16,16 @@ log:
   format: common
 
 entryPoints:
+  redis:
+    address: ":6379"
+  postgresql:
+    address: ":5432"
   http:
     address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: https
+          scheme: https
   https:
     address: ":443"
-
-certificatesResolvers:
-  letsencrypt:
-    acme:
-      email: "hernanyailen@gmail.com"
-      storage: "/acme/acme.json"
-      httpChallenge:
-        entryPoint: http

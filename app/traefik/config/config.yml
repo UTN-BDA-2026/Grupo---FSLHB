@@ -1,25 +1,39 @@
 http:
   middlewares:
-    redirect-to-https:
+    redirect-to-https-local:
       redirectScheme:
         scheme: https
+        port: "8444"
         permanent: true
 
   routers:
-    hockey:
-      rule: "Host(`hockeyaccionsanrafael.com`) || Host(`www.hockeyaccionsanrafael.com`)"
+    traefik:
+      rule: "Host(`traefik.universidad.localhost`)"
       entryPoints:
         - https
+      service: "api@internal"
       tls:
-        certResolver: letsencrypt
+        domains:
+          - main: "universidad.localhost"
+            sans:
+              - "*.universidad.localhost"
+          - main: "universidad.local"
+            sans:
+              - "*.universidad.local"
+
+    hockey-local-https:
+      rule: "Host(`localhost`) || Host(`127.0.0.1`)"
+      entryPoints:
+        - https
+      tls: {}
       service: hockey
 
-    http-catchall:
-      rule: "HostRegexp(`{host:.+}`)"
+    hockey-local-http:
+      rule: "Host(`localhost`) || Host(`127.0.0.1`)"
       entryPoints:
         - http
       middlewares:
-        - redirect-to-https
+        - redirect-to-https-local
       service: hockey
 
   services:
@@ -27,3 +41,8 @@ http:
       loadBalancer:
         servers:
           - url: "http://app:5000"
+
+tls:
+  certificates:
+    - certFile: "/etc/certs/cert.pem"
+      keyFile: "/etc/certs/key.pem"
