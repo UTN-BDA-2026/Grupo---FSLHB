@@ -64,16 +64,8 @@ services:
       SESSION_COOKIE_SECURE: "true"
       MONGO_URI: mongodb://admin:adminpass@mongodb:27017/hockey?authSource=admin
       DATABASE_URL: mysql+pymysql://hockeyuser:hockeypass@mariadb:3306/hockey
-      # Variables para que el script de migración se conecte a Postgres dentro de la red Docker
-      PGHOST: db
-      PGPORT: "5432"
-      PGDATABASE: hockey
-      PGUSER: hockeyuser
-      PGPASSWORD: hockeypass
       FLASK_APP: app
       FLASK_DEBUG: "0"
-      HOST: 0.0.0.0
-      PORT: 5000
       SECRET_KEY: "HockeyAccionProdSecret2025!"
       CORS_ORIGINS: "https://hockeyaccionsanrafael.com,https://www.hockeyaccionsanrafael.com"
       ENABLE_CSRF: "true"
@@ -90,5 +82,3 @@ volumes:
   mongodata:
   mariadbdata:
   postgresdata:
-
-
