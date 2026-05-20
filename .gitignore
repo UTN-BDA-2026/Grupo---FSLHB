@@ -1,3 +1,8 @@
+# Certificados y ejecutables generados por mkcert/Traefik
+app/traefik/certs/
+app/traefik/*.pem
+app/traefik/*.exe
+
 # Entorno virtual
 venv/
 
@@ -11,7 +16,7 @@ __pycache__/
 
 # Archivos de entorno
 .env
-.env.*
+!.env.example
 
 # Archivos de logs
 *.log
