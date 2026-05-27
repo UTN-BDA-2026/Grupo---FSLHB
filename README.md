@@ -168,4 +168,4 @@ Al clonar este repositorio y ejecutar `docker compose up --build`, la aplicació
 Este proyecto es software propietario. Todos los derechos reservados. Queda prohibida la copia, distribución o modificación sin el permiso expreso del autor. Consulta el archivo LICENSE para más información.
 
 ---
-Desarrollado por Hernán Peñalbé, 2025.
+Desarrollado por Bruno Carrieri y otros, 2025.
