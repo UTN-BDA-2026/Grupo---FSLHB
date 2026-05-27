@@ -12,6 +12,16 @@ class UsuarioService:
     def autenticar(username, password):
         usuario = UsuarioRepositorio.buscar_por_username(username)
         if usuario and check_password_hash(usuario.password, password):
+            # Adjuntar info del club para que el front pueda mostrar nombre
+            # (UsuarioSchema expone `club` como nested con id/nombre)
+            try:
+                if getattr(usuario, 'club_id', None):
+                    club_doc = mongo.db.clubes.find_one({'_id': ObjectId(usuario.club_id)})
+                    if club_doc:
+                        usuario.club = Club.from_dict(club_doc)
+            except Exception:
+                # No romper login si el club no existe o el id es inválido
+                pass
             return usuario
         return None
 
