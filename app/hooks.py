@@ -27,10 +27,10 @@ def register_security_headers(app) -> None:
             'Content-Security-Policy',
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' https://www.instagram.com; "
-            "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; "
+            "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
             "img-src 'self' data: https://res.cloudinary.com; "
-            "font-src 'self' https://cdnjs.cloudflare.com; "
-            "connect-src 'self'; "
+            "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; "
+            "connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; "
             "frame-src https://www.google.com https://www.facebook.com https://www.instagram.com; "
             "frame-ancestors 'none'; "
             "object-src 'none'; "

@@ -3,7 +3,18 @@
 Deja `app.__init__` liviano y mantiene compatibilidad con `from app import create_app`.
 """
 
+import json
+from bson import ObjectId
 from flask import Flask
+from flask.json.provider import DefaultJSONProvider
+
+
+class MongoJSONProvider(DefaultJSONProvider):
+    """JSON Provider que serializa ObjectId de MongoDB."""
+    def default(self, o):
+        if isinstance(o, ObjectId):
+            return str(o)
+        return super().default(o)
 
 
 def create_app(config_name: str | None = None) -> Flask:
@@ -18,6 +29,9 @@ def create_app(config_name: str | None = None) -> Flask:
     )
 
     app = Flask(__name__)
+    
+    # Configurar JSON provider personalizado para serializar ObjectId
+    app.json = MongoJSONProvider(app)
 
     load_env_file()
     effective_config_name = apply_app_config(app, config_name)
