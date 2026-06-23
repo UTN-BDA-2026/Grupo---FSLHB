@@ -1,5 +1,6 @@
 
 from flask import Blueprint, request, jsonify
+from marshmallow import ValidationError
 from app.models import Club
 from app.services.club_service import ClubService
 from app.mappings.club_mapping import ClubMapping
@@ -11,9 +12,15 @@ club_schema = ClubMapping()
 @clubs_bp.route('/clubs', methods=['POST'])
 @require_admin
 def crear():
-    club = club_schema.load(request.get_json())
-    ClubService.crear(club)
-    return club_schema.dump(club), 201
+    data = request.get_json() or {}
+    try:
+        club_data = club_schema.load(data)
+    except ValidationError as error:
+        return jsonify({'error': 'Datos inválidos', 'detail': error.messages}), 400
+
+    club = Club.from_dict(club_data)
+    club = ClubService.crear(club)
+    return jsonify(club_schema.dump(club)), 201
 
 @clubs_bp.route('/clubs', methods=['GET'])
 def buscar_todos():
@@ -33,10 +40,19 @@ def actualizar(id):
     club = ClubService.buscar_por_id(id)
     if not club:
         return jsonify({'error': 'Club no encontrado'}), 404
-    data = club_schema.load(request.get_json())
-    club.nombre = data.nombre
-    ClubService.actualizar(club)
-    return club_schema.dump(club), 200
+
+    data = request.get_json() or {}
+    try:
+        club_data = club_schema.load(data)
+    except ValidationError as error:
+        return jsonify({'error': 'Datos inválidos', 'detail': error.messages}), 400
+
+    for field, value in club_data.items():
+        if field != '_id':
+            setattr(club, field, value)
+
+    club = ClubService.actualizar(club)
+    return jsonify(club_schema.dump(club)), 200
 
 @clubs_bp.route('/clubs/<id>', methods=['DELETE'])
 @require_admin
