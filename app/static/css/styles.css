@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
 /* Vista noticia completa responsive */
 .noticia-completa {
     background: #fff;
@@ -88,7 +90,6 @@
 .dropdown-menu a:hover {
     background: #bbdefb;
 }
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 
 body {
     font-family: 'Roboto', Arial, sans-serif;

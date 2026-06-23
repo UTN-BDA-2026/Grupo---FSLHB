@@ -44,9 +44,9 @@ document.addEventListener('DOMContentLoaded', () => {
         panelContent.innerHTML = '<p>No hay árbitros cargados.</p>';
         return;
       }
-      const filas = lista.map(a => `
+      const filas = lista.map((a, idx) => `
         <tr>
-          <td>${a.id}</td>
+          <td>${idx + 1}</td>
           <td>${a.apellido}</td>
           <td>${a.nombre}</td>
           <td>${a.dni}</td>
@@ -90,9 +90,9 @@ document.addEventListener('DOMContentLoaded', () => {
         panelContent.innerHTML = '<p>No hay clubes cargados.</p>';
         return;
       }
-      const filas = lista.map(c => `
+      const filas = lista.map((c, idx) => `
         <tr>
-          <td>${c.id}</td>
+          <td>${idx + 1}</td>
           <td>${c.nombre}</td>
           <td>${c.razon_social || ''}</td>
           <td>${c.cancha_local || ''}</td>
@@ -136,9 +136,9 @@ document.addEventListener('DOMContentLoaded', () => {
         panelContent.innerHTML = '<p>No hay torneos cargados.</p>';
         return;
       }
-      const filas = lista.map(t => `
+      const filas = lista.map((t, idx) => `
         <tr>
-          <td>${t.id}</td>
+          <td>${idx + 1}</td>
           <td>${t.nombre}</td>
           <td>${t.max_fechas}</td>
         </tr>
