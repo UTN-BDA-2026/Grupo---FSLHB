@@ -5,9 +5,13 @@ from app.models.jugadora import Jugadora
 class JugadoraRepository:
     @staticmethod
     def crear(jugadora):
-        db.session.add(jugadora)
-        db.session.commit()
-        return jugadora
+        try:
+            db.session.add(jugadora)
+            db.session.commit()
+            return jugadora
+        except Exception:
+            db.session.rollback()
+            raise
 
     @staticmethod
     def buscar_por_id(id):
@@ -38,15 +42,23 @@ class JugadoraRepository:
 
     @staticmethod
     def actualizar_jugadora(jugadora):
-        db.session.add(jugadora)
-        db.session.commit()
-        return jugadora
+        try:
+            db.session.add(jugadora)
+            db.session.commit()
+            return jugadora
+        except Exception:
+            db.session.rollback()
+            raise
 
     @staticmethod
     def borrar_por_id(id):
         jugadora = JugadoraRepository.buscar_por_id(id)
         if not jugadora:
             return None
-        db.session.delete(jugadora)
-        db.session.commit()
-        return jugadora
+        try:
+            db.session.delete(jugadora)
+            db.session.commit()
+            return jugadora
+        except Exception:
+            db.session.rollback()
+            raise

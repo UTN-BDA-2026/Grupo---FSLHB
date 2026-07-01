@@ -69,11 +69,13 @@ class UsuarioService:
         hashed_pw = UsuarioService.hashear_password(password)
 
         club_id = None
+        club_creado = None
         if club_nombre:
             doc = mongo.db.clubes.find_one({'nombre': club_nombre})
             if not doc:
                 club = Club(nombre=club_nombre)
                 ClubRepository.crear(club)
+                club_creado = club
                 club_id = club._id
             else:
                 club_id = doc['_id']
@@ -88,9 +90,17 @@ class UsuarioService:
         )
         doc = usuario.to_dict()
         doc.pop('_id', None)
-        result = mongo.db.usuarios.insert_one(doc)
-        usuario._id = result.inserted_id
-        return usuario
+        try:
+            result = mongo.db.usuarios.insert_one(doc)
+            usuario._id = result.inserted_id
+            return usuario
+        except Exception:
+            if club_creado is not None:
+                try:
+                    ClubRepository.borrar_por_id(club_creado._id)
+                except Exception:
+                    pass
+            raise
 
     @staticmethod
     def eliminar_usuario(usuario_id) -> bool:
