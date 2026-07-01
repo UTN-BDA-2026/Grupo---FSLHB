@@ -118,23 +118,34 @@ El objetivo es centralizar toda la información relevante y facilitar la gestió
 Para facilitar la generación de copias de seguridad tanto de MariaDB como de MongoDB, el proyecto cuenta con un script automatizado para entornos de Windows.
 
 8. **Generar un nuevo backup manual:**
-    - Verificá que los contenedores estén encendidos (el motor de base de datos debe estar corriendo para extraer los datos).
+    - Verificá que los contenedores estén encendidos y que el motor de base de datos esté funcionando.
     - Ejecutá el script de PowerShell desde la raíz del proyecto:
     ```ps1
-	.\generar_backups.ps1
+    .\generar_backups.ps1
+    ```
+    - Si querés validar la restauración del backup al mismo tiempo, usá:
+    ```ps1
+    .\generar_backups.ps1 -ValidateRestore
+    ```
+    - Los archivos quedarán guardados en la carpeta `backups/`.
 
-9. **Restaurar un backup (En caso de error o migración de PC):**
-	- Si necesitás restablecer la base de datos a un punto anterior, primero se copia el archivo de backup hacia dentro del contenedor y luego se ejecuta la restauración.
-	- Reemplazá `[ARCHIVO]` por el nombre exacto de tu archivo generado (por ejemplo, `mariadb_20260514_193000.sql`).
+9. **Restaurar un backup (en caso de error o migración de PC):**
+    - Reemplazá `[ARCHIVO]` por el nombre exacto del backup que querés restaurar, por ejemplo `mariadb_20260514_193000.sql` o `mongodb_20260514_193000.archive`.
+    - Asegurate de que los contenedores estén levantados.
 
-	- **Para restaurar MariaDB:**
-	```sh
-	docker compose --project-directory . -f docker/docker-compose.yml cp .\backups\[ARCHIVO].sql mariadb:/tmp/restore.sql
-	docker compose --project-directory . -f docker/docker-compose.yml exec mariadb sh -c "mariadb -u hockeyuser -phockeypass hockey < /tmp/restore.sql"
-	- Para restaurar MongoDB:
-	 ```sh
-	docker compose --project-directory . -f docker/docker-compose.yml cp .\backups[ARCHIVO].archive mongodb:/tmp/restore.archive
-	docker compose --project-directory . -f docker/docker-compose.yml exec mongodb sh -c "mongorestore --username admin --password adminpass --authenticationDatabase admin --archive=/tmp/restore.archive --drop"
+    - **Para restaurar MariaDB:**
+    ```sh
+    docker compose --project-directory . -f docker/docker-compose.yml cp .\backups\[ARCHIVO].sql mariadb:/tmp/restore.sql
+    docker compose --project-directory . -f docker/docker-compose.yml exec mariadb sh -c "mariadb -u hockeyuser -phockeypass hockey < /tmp/restore.sql"
+    ```
+
+    - **Para restaurar MongoDB:**
+    ```sh
+    docker compose --project-directory . -f docker/docker-compose.yml cp .\backups\[ARCHIVO].archive mongodb:/tmp/restore.archive
+    docker compose --project-directory . -f docker/docker-compose.yml exec mongodb sh -c "mongorestore --username admin --password adminpass --authenticationDatabase admin --archive=/tmp/restore.archive --drop"
+    ```
+
+    - **Importante:** para restaurar el sistema completo, necesitás usar el backup de MariaDB y el backup de MongoDB correspondientes al mismo momento.
 
 
 
